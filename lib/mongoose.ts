@@ -45,6 +45,11 @@ if (!global.mongoose) {
 }
 
 async function dbConnect() {
+  // Don't attempt connection during build if no MongoDB URI
+  if (!process.env.MONGODB_URI && process.env.NODE_ENV === 'production') {
+    throw new Error('MongoDB URI not configured for production')
+  }
+
   if (cached.conn) {
     return cached.conn
   }
@@ -322,17 +327,32 @@ const CategorySchema = new mongoose.Schema<ICategory>({
   timestamps: true
 })
 
-// Models
-export const Product = mongoose.models.Product || mongoose.model<IProduct>('Product', ProductSchema)
-export const User = mongoose.models.User || mongoose.model<IUser>('User', UserSchema)
-export const CartItem = mongoose.models.CartItem || mongoose.model<ICartItem>('CartItem', CartItemSchema)
-export const Order = mongoose.models.Order || mongoose.model<IOrder>('Order', OrderSchema)
-export const Coupon = mongoose.models.Coupon || mongoose.model<ICoupon>('Coupon', CouponSchema)
-export const Review = mongoose.models.Review || mongoose.model<IReview>('Review', ReviewSchema)
-export const Wishlist = mongoose.models.Wishlist || mongoose.model<IWishlist>('Wishlist', WishlistSchema)
-export const BlogPost = mongoose.models.BlogPost || mongoose.model<IBlogPost>('BlogPost', BlogPostSchema)
-export const Analytics = mongoose.models.Analytics || mongoose.model<IAnalytics>('Analytics', AnalyticsSchema)
-export const Newsletter = mongoose.models.Newsletter || mongoose.model<INewsletter>('Newsletter', NewsletterSchema)
-export const Category = mongoose.models.Category || mongoose.model<ICategory>('Category', CategorySchema)
+// Models - only create if not in build environment
+let Product: any, User: any, CartItem: any, Order: any, Coupon: any, Review: any, 
+    Wishlist: any, BlogPost: any, Analytics: any, Newsletter: any, Category: any
+
+// Function to initialize models safely
+function initModels() {
+  if (!Product) {
+    Product = mongoose.models.Product || mongoose.model<IProduct>('Product', ProductSchema)
+    User = mongoose.models.User || mongoose.model<IUser>('User', UserSchema)
+    CartItem = mongoose.models.CartItem || mongoose.model<ICartItem>('CartItem', CartItemSchema)
+    Order = mongoose.models.Order || mongoose.model<IOrder>('Order', OrderSchema)
+    Coupon = mongoose.models.Coupon || mongoose.model<ICoupon>('Coupon', CouponSchema)
+    Review = mongoose.models.Review || mongoose.model<IReview>('Review', ReviewSchema)
+    Wishlist = mongoose.models.Wishlist || mongoose.model<IWishlist>('Wishlist', WishlistSchema)
+    BlogPost = mongoose.models.BlogPost || mongoose.model<IBlogPost>('BlogPost', BlogPostSchema)
+    Analytics = mongoose.models.Analytics || mongoose.model<IAnalytics>('Analytics', AnalyticsSchema)
+    Newsletter = mongoose.models.Newsletter || mongoose.model<INewsletter>('Newsletter', NewsletterSchema)
+    Category = mongoose.models.Category || mongoose.model<ICategory>('Category', CategorySchema)
+  }
+}
+
+// Only initialize models at runtime, not during build
+if (process.env.NODE_ENV !== 'production' || process.env.MONGODB_URI) {
+  initModels()
+}
+
+export { Product, User, CartItem, Order, Coupon, Review, Wishlist, BlogPost, Analytics, Newsletter, Category }
 
 export default dbConnect
