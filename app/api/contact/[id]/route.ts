@@ -1,12 +1,22 @@
 import { type NextRequest, NextResponse } from "next/server"
-import clientPromise from "@/lib/mongodb"
-import { ObjectId } from "mongodb"
+// Dynamic import - will be loaded at runtime
+// Dynamic import - will be loaded at runtime
 
 export async function PUT(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
+    // Check if required environment variables are available
+    if (!process.env.MONGODB_URI) {
+      return NextResponse.json(
+        { error: 'Database not configured' },
+        { status: 503 }
+      )
+    }
+
+    // Import MongoDB client only when needed
+    const { default: clientPromise } = await import('@/lib/mongodb')
     const body = await request.json()
     const { status, priority, adminNotes } = body
 
@@ -50,6 +60,16 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
+    // Check if required environment variables are available
+    if (!process.env.MONGODB_URI) {
+      return NextResponse.json(
+        { error: 'Database not configured' },
+        { status: 503 }
+      )
+    }
+
+    // Import MongoDB client only when needed
+    const { default: clientPromise } = await import('@/lib/mongodb')
     if (!ObjectId.isValid(params.id)) {
       return NextResponse.json({ error: "Invalid message ID" }, { status: 400 })
     }

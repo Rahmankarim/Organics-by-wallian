@@ -11,7 +11,7 @@ This guide will help you deploy your Luxury Dry Fruits E-commerce platform to Ve
 ## 🔧 Step 1: Set Up MongoDB Atlas
 
 1. **Create MongoDB Atlas Account**: Go to [MongoDB Atlas](https://www.mongodb.com/atlas) and create a free account
-2. **Create a Cluster**: 
+2. **Create a Cluster**:
    - Choose "Build a Database" → "Free Shared" tier
    - Select your preferred cloud provider and region
    - Name your cluster (e.g., "luxury-dry-fruits")
@@ -33,11 +33,13 @@ This guide will help you deploy your Luxury Dry Fruits E-commerce platform to Ve
 ### Option A: Direct GitHub Integration (Recommended)
 
 1. **Connect to Vercel**:
+
    - Go to [Vercel Dashboard](https://vercel.com/dashboard)
    - Click "New Project"
    - Import your GitHub repository `Organics-by-wallian`
 
 2. **Configure Build Settings**:
+
    - Framework Preset: **Next.js**
    - Root Directory: `./` (default)
    - Build Command: `npm run build` (default)
@@ -51,17 +53,17 @@ This guide will help you deploy your Luxury Dry Fruits E-commerce platform to Ve
    MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/OrganicsByWalian
    JWT_SECRET=your-super-secret-jwt-key-make-it-long-and-random-at-least-32-characters
    JWT_EXPIRES_IN=7d
-   
+
    # NextAuth (if using authentication)
    NEXTAUTH_SECRET=another-super-secret-key-for-nextauth-at-least-32-characters
    NEXTAUTH_URL=https://your-project-name.vercel.app
-   
+
    # Optional: Email Configuration
    EMAIL_HOST=smtp.gmail.com
    EMAIL_PORT=587
    EMAIL_USER=your-email@gmail.com
    EMAIL_PASS=your-app-password
-   
+
    # Optional: Stripe (for payments)
    STRIPE_SECRET_KEY=sk_live_your_stripe_secret_key
    STRIPE_PUBLISHABLE_KEY=pk_live_your_stripe_publishable_key
@@ -119,7 +121,7 @@ node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 After deployment, you can populate your database with sample data:
 
 1. **Access your deployed site**: `https://your-project-name.vercel.app`
-2. **Call the seed endpoint**: 
+2. **Call the seed endpoint**:
    ```bash
    curl -X POST https://your-project-name.vercel.app/api/admin/seed
    ```
@@ -170,6 +172,7 @@ After deployment, you can populate your database with sample data:
 ## 📞 Support
 
 If you encounter issues:
+
 1. Check Vercel deployment logs
 2. Check MongoDB Atlas connection logs
 3. Verify all environment variables are set correctly
@@ -178,6 +181,7 @@ If you encounter issues:
 ## 🔄 Updates
 
 To deploy updates:
+
 1. Push changes to your main branch on GitHub
 2. Vercel will automatically redeploy
 3. No additional configuration needed

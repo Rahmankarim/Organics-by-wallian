@@ -1,8 +1,18 @@
 import { type NextRequest, NextResponse } from "next/server"
-import clientPromise from "@/lib/mongodb"
+// Dynamic import - will be loaded at runtime
 
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
+    // Check if required environment variables are available
+    if (!process.env.MONGODB_URI) {
+      return NextResponse.json(
+        { error: 'Database not configured' },
+        { status: 503 }
+      )
+    }
+
+    // Import MongoDB client only when needed
+    const { default: clientPromise } = await import('@/lib/mongodb')
     const client = await clientPromise
     const db = client.db("organic_orchard")
 
@@ -21,6 +31,16 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 
 export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   try {
+    // Check if required environment variables are available
+    if (!process.env.MONGODB_URI) {
+      return NextResponse.json(
+        { error: 'Database not configured' },
+        { status: 503 }
+      )
+    }
+
+    // Import MongoDB client only when needed
+    const { default: clientPromise } = await import('@/lib/mongodb')
     const client = await clientPromise
     const db = client.db("organic_orchard")
 

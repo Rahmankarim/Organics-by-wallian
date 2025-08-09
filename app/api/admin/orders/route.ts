@@ -1,9 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server"
-import clientPromise from "@/lib/mongodb"
-import type { Order } from "@/lib/models"
+import type { IOrder } from "@/lib/models"
 
 // Sample orders data for initialization
-const sampleOrders: Order[] = [
+const sampleOrders: IOrder[] = [
   {
     id: "ORD-001",
     userId: "demo-user",
@@ -124,6 +123,16 @@ const sampleOrders: Order[] = [
 
 export async function GET(request: NextRequest) {
   try {
+    // Check if required environment variables are available
+    if (!process.env.MONGODB_URI) {
+      return NextResponse.json(
+        { error: 'Database not configured' },
+        { status: 503 }
+      )
+    }
+
+    // Import MongoDB client only when needed
+    const { default: clientPromise } = await import('@/lib/mongodb')
     const client = await clientPromise
     const db = client.db("organic_orchard")
 

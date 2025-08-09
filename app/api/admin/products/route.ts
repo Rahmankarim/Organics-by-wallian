@@ -1,9 +1,18 @@
 import { type NextRequest, NextResponse } from "next/server"
-import clientPromise from "@/lib/mongodb"
 import type { IProduct } from "@/lib/models"
 
 export async function GET(request: NextRequest) {
   try {
+    // Check if required environment variables are available
+    if (!process.env.MONGODB_URI) {
+      return NextResponse.json(
+        { error: 'Database not configured' },
+        { status: 503 }
+      )
+    }
+
+    // Import MongoDB client only when needed
+    const { default: clientPromise } = await import('@/lib/mongodb')
     const client = await clientPromise
     const db = client.db("organic_orchard")
 
@@ -54,6 +63,17 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    // Check if required environment variables are available
+    if (!process.env.MONGODB_URI) {
+      return NextResponse.json(
+        { error: 'Database not configured' },
+        { status: 503 }
+      )
+    }
+
+    // Import MongoDB client only when needed
+    const { default: clientPromise } = await import('@/lib/mongodb')
+    
     const body = await request.json()
     const client = await clientPromise
     const db = client.db("organic_orchard")
@@ -62,23 +82,39 @@ export async function POST(request: NextRequest) {
     const lastProduct = await db.collection("products").findOne({}, { sort: { id: -1 } })
     const nextId = lastProduct ? lastProduct.id + 1 : 1
 
-    // Prepare product data
-    const productData: IProduct = {
+    // Prepare product data with minimal required fields
+    const productData = {
       id: nextId,
       name: body.name,
+      slug: body.name.toLowerCase().replace(/\s+/g, '-'),
+      description: body.description,
+      shortDescription: body.shortDescription || body.description?.substring(0, 150) + '...',
       price: Number(body.price),
       originalPrice: body.originalPrice ? Number(body.originalPrice) : Number(body.price),
       category: body.category,
+      subcategory: body.subcategory,
       weight: body.weight,
-      description: body.description,
       badge: body.badge || "New",
       inStock: body.inStock !== false,
       stockCount: Number(body.stockCount) || 0,
       rating: Number(body.rating) || 5,
-      reviews: Number(body.reviews) || 0,
+      reviewCount: Number(body.reviewCount) || 0,
       images: body.images || [body.image || "/placeholder.jpg"],
       features: body.features || [],
       benefits: body.benefits || [],
+      tags: body.tags || [],
+      variants: body.variants || [],
+      nutritionFacts: body.nutritionFacts || {
+        calories: '0',
+        protein: '0g',
+        fat: '0g',
+        carbs: '0g',
+        fiber: '0g',
+        vitaminE: '0mg',
+        serving: '100g'
+      },
+      createdAt: new Date(),
+      updatedAt: new Date(),
       nutritionFacts: body.nutritionFacts || {
         calories: "0 per 100g",
         protein: "0g",
