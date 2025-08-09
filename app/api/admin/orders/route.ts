@@ -1,6 +1,9 @@
 import { type NextRequest, NextResponse } from "next/server"
 import type { IOrder } from "@/lib/models"
 
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
+
 // Sample orders data for initialization
 const sampleOrders: IOrder[] = [
   {

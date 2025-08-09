@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { User } from '@/lib/mongoose'
 import dbConnect from '@/lib/mongoose'
 
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)

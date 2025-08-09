@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import dbConnect, { Order } from '@/lib/mongoose'
 import { verifyToken } from '@/lib/auth'
 
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
+
 export async function GET(request: NextRequest) {
   try {
     // Get token from header

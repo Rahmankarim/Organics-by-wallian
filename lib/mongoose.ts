@@ -56,12 +56,26 @@ async function dbConnect() {
 
   if (!cached.promise) {
     const mongoUri = checkMongoURI() // Check URI only when actually connecting
+    
+    // Enhanced MongoDB connection options for Vercel serverless
     const opts = {
       bufferCommands: false,
       maxPoolSize: 10,
       serverSelectionTimeoutMS: 5000,
       socketTimeoutMS: 45000,
-      family: 4 // Use IPv4, skip trying IPv6
+      family: 4, // Use IPv4, skip trying IPv6
+      // SSL/TLS configuration for MongoDB Atlas
+      ssl: true,
+      tls: true,
+      tlsAllowInvalidCertificates: false,
+      tlsAllowInvalidHostnames: false,
+      // Additional connection settings
+      retryWrites: true,
+      w: 'majority',
+      // Connection pool settings for serverless
+      minPoolSize: 0,
+      maxIdleTimeMS: 30000,
+      waitQueueTimeoutMS: 5000,
     }
 
     cached.promise = mongoose.connect(mongoUri, opts)

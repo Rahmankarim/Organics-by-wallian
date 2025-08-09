@@ -1,12 +1,12 @@
 'use client'
 
-import { useEffect, Suspense } from 'react'
-import { usePathname, useSearchParams } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import { usePathname } from 'next/navigation'
 
 // Google Analytics tracking ID
 const GA_TRACKING_ID = process.env.NEXT_PUBLIC_GA_ID
 
-// Track page views
+// Track page views without using useSearchParams
 export const trackPageView = (url: string) => {
   if (typeof window !== 'undefined' && (window as any).gtag) {
     (window as any).gtag('config', GA_TRACKING_ID, {
@@ -26,25 +26,34 @@ export const trackEvent = (action: string, category: string, label?: string, val
   }
 }
 
-// Internal analytics component that uses useSearchParams
-function AnalyticsInternal() {
+// Simple analytics component that doesn't use useSearchParams
+function AnalyticsTracker() {
   const pathname = usePathname()
-  const searchParams = useSearchParams()
 
   useEffect(() => {
-    if (GA_TRACKING_ID) {
-      const url = `${pathname}${searchParams ? `?${searchParams}` : ''}`
+    if (GA_TRACKING_ID && typeof window !== 'undefined') {
+      // Use window.location.search instead of useSearchParams
+      const search = window.location.search
+      const url = `${pathname}${search}`
       trackPageView(url)
     }
-  }, [pathname, searchParams])
+  }, [pathname])
 
   return null
 }
 
-// Analytics provider component with Suspense boundary
+// Analytics provider component
 export default function Analytics() {
-  // Only render script tags if GA_TRACKING_ID is provided
-  if (!GA_TRACKING_ID) return null
+  const [isClient, setIsClient] = useState(false)
+
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
+
+  // Don't render anything on the server or if no GA ID
+  if (!isClient || !GA_TRACKING_ID) {
+    return null
+  }
 
   return (
     <>
@@ -59,14 +68,12 @@ export default function Analytics() {
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
             gtag('config', '${GA_TRACKING_ID}', {
-              page_path: window.location.pathname,
+              page_path: window.location.pathname + window.location.search,
             });
           `,
         }}
       />
-      <Suspense fallback={null}>
-        <AnalyticsInternal />
-      </Suspense>
+      <AnalyticsTracker />
     </>
   )
 }
