@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import dbConnect from '@/lib/mongoose'
 import { Order, Analytics } from '@/lib/mongoose'
-// Dynamic import - will be loaded at runtime
 import { headers } from 'next/headers'
+
+// Route segment config to prevent static analysis during build
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,7 +17,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Import Stripe only when needed
+    // Import Stripe only when needed at runtime
     const { default: Stripe } = await import('stripe')
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
       apiVersion: '2025-07-30.basil'

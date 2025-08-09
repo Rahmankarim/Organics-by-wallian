@@ -2,9 +2,14 @@ import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import crypto from 'crypto'
 import { NextRequest, NextResponse } from 'next/server'
+import dbConnect from './mongoose'
+import { User } from './mongoose'
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key'
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d'
+// Get JWT configuration at runtime to avoid build-time issues
+const getJWTConfig = () => ({
+  secret: process.env.JWT_SECRET || 'your-secret-key',
+  expiresIn: process.env.JWT_EXPIRES_IN || '7d'
+})
 
 export interface JWTPayload {
   userId: string
@@ -24,15 +29,17 @@ export const verifyPassword = async (password: string, hashedPassword: string): 
 
 // JWT utilities
 export const generateToken = (payload: JWTPayload, expiresIn?: string): string => {
-  return jwt.sign(payload, JWT_SECRET, { 
-    expiresIn: expiresIn || JWT_EXPIRES_IN,
+  const config = getJWTConfig()
+  return jwt.sign(payload, config.secret, { 
+    expiresIn: expiresIn || config.expiresIn,
     algorithm: 'HS256'
   })
 }
 
 export const verifyToken = (token: string): JWTPayload | null => {
   try {
-    return jwt.verify(token, JWT_SECRET) as JWTPayload
+    const config = getJWTConfig()
+    return jwt.verify(token, config.secret) as JWTPayload
   } catch (error) {
     return null
   }
