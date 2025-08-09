@@ -5,6 +5,19 @@ const uri = process.env.MONGODB_URI!
 
 export async function GET(request: NextRequest) {
   try {
+    // Check if MongoDB URI is configured
+    if (!process.env.MONGODB_URI) {
+      return NextResponse.json({
+        totalOrders: 0,
+        totalRevenue: 0,
+        totalProducts: 0,
+        totalUsers: 0,
+        recentOrders: [],
+        lowStockProducts: [],
+        orderStatusBreakdown: {}
+      })
+    }
+
     const client = new MongoClient(uri)
     await client.connect()
     const db = client.db('OrganicsByWalian')

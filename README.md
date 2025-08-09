@@ -326,6 +326,7 @@ npm run type-check
 1. **Fork or clone this repository**
 
 2. **Set up environment variables in Vercel:**
+
    - Go to your Vercel dashboard
    - Select your project
    - Navigate to Settings → Environment Variables
@@ -340,6 +341,7 @@ npm run type-check
    ```
 
 3. **Deploy to Vercel:**
+
    ```bash
    npm run build
    vercel --prod

@@ -1,10 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
-import clientPromise from '@/lib/mongodb'
+import { MongoClient } from 'mongodb'
 
 export async function POST(request: NextRequest) {
   try {
-    const client = await clientPromise
-    const db = client.db()
+    // Check if MongoDB is configured
+    if (!process.env.MONGODB_URI) {
+      return NextResponse.json(
+        { error: 'Database not configured' },
+        { status: 503 }
+      )
+    }
+
+    const client = new MongoClient(process.env.MONGODB_URI!)
+    await client.connect()
+    const db = client.db('OrganicsByWalian')
 
     // Clear existing data
     await db.collection('products').deleteMany({})
@@ -217,6 +226,8 @@ export async function POST(request: NextRequest) {
 
     // Insert orders
     const insertedOrders = await db.collection('orders').insertMany(orders)
+
+    await client.close()
 
     return NextResponse.json({
       success: true,

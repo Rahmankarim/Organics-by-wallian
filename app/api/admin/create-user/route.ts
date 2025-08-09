@@ -1,9 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
-import clientPromise from '@/lib/mongodb'
 import bcrypt from 'bcryptjs'
 
 export async function POST(request: NextRequest) {
   try {
+    // Check if MongoDB is configured
+    if (!process.env.MONGODB_URI) {
+      return NextResponse.json(
+        { error: 'Database not configured' },
+        { status: 503 }
+      )
+    }
+
+    // Import MongoDB client only when needed
+    const { default: clientPromise } = await import('@/lib/mongodb')
     const client = await clientPromise
     const db = client.db('organic_orchard')
 
