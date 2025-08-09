@@ -319,6 +319,48 @@ npm run lint
 npm run type-check
 ```
 
+## 🚀 Deployment
+
+### Vercel Deployment
+
+1. **Fork or clone this repository**
+
+2. **Set up environment variables in Vercel:**
+   - Go to your Vercel dashboard
+   - Select your project
+   - Navigate to Settings → Environment Variables
+   - Add the following required variables:
+
+   ```bash
+   MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/OrganicsByWalian
+   JWT_SECRET=your-super-secret-jwt-key-here
+   JWT_EXPIRES_IN=7d
+   NEXTAUTH_SECRET=your-nextauth-secret
+   NEXTAUTH_URL=https://your-domain.vercel.app
+   ```
+
+3. **Deploy to Vercel:**
+   ```bash
+   npm run build
+   vercel --prod
+   ```
+
+4. **Set up MongoDB Atlas (recommended for production):**
+   - Create a MongoDB Atlas account
+   - Create a new cluster
+   - Get your connection string
+   - Add it to your Vercel environment variables
+
+### Alternative Deployment Options
+
+- **Netlify**: Configure build settings and environment variables
+- **Railway**: Connect GitHub repo and set environment variables
+- **DigitalOcean App Platform**: Deploy via GitHub integration
+
+### Environment Variables Reference
+
+All environment variables are documented in `.env.example`. Copy this file to `.env.local` for local development.
+
 ## 🤝 Contributing
 
 1. Fork the repository

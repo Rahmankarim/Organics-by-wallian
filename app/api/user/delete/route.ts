@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import dbConnect, { User, Order, Cart } from '@/lib/mongoose'
+import dbConnect, { User, Order, CartItem } from '@/lib/mongoose'
 import { verifyToken } from '@/lib/auth'
 
 export async function DELETE(request: NextRequest) {
@@ -47,7 +47,7 @@ export async function DELETE(request: NextRequest) {
     // Delete user's associated data
     await Promise.all([
       // Delete user's cart
-      Cart.deleteMany({ userId: payload.userId }),
+      CartItem.deleteMany({ userId: payload.userId }),
       
       // Mark orders as anonymized instead of deleting (for business records)
       Order.updateMany(
