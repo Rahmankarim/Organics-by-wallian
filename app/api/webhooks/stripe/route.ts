@@ -1,17 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server'
 import dbConnect from '@/lib/mongoose'
 import { Order, Analytics } from '@/lib/mongoose'
-import Stripe from 'stripe'
+// Dynamic import - will be loaded at runtime
 import { headers } from 'next/headers'
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-07-30.basil'
-})
-
-const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!
 
 export async function POST(request: NextRequest) {
   try {
+    // Check if Stripe is configured
+    if (!process.env.STRIPE_SECRET_KEY || !process.env.STRIPE_WEBHOOK_SECRET) {
+      return NextResponse.json(
+        { error: 'Stripe webhook not configured' },
+        { status: 503 }
+      )
+    }
+
+    // Import Stripe only when needed
+    const { default: Stripe } = await import('stripe')
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+      apiVersion: '2025-07-30.basil'
+    })
+    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!
+
     const body = await request.text()
     const signature = headers().get('stripe-signature')!
 

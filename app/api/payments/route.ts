@@ -2,14 +2,24 @@ import { NextRequest, NextResponse } from 'next/server'
 import dbConnect from '@/lib/mongoose'
 import { Order, Product, CartItem } from '@/lib/mongoose'
 import { getUserFromRequest } from '@/lib/auth'
-import Stripe from 'stripe'
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-07-30.basil'
-})
+// Dynamic import - will be loaded at runtime
 
 export async function POST(request: NextRequest) {
   try {
+    // Check if Stripe is configured
+    if (!process.env.STRIPE_SECRET_KEY) {
+      return NextResponse.json(
+        { error: 'Payment processing not configured' },
+        { status: 503 }
+      )
+    }
+
+    // Import Stripe only when needed
+    const { default: Stripe } = await import('stripe')
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+      apiVersion: '2025-07-30.basil'
+    })
+
     const user = await getUserFromRequest(request)
     if (!user) {
       return NextResponse.json(
