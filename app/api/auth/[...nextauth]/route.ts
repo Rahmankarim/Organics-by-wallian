@@ -3,16 +3,22 @@ import CredentialsProvider from 'next-auth/providers/credentials'
 import GoogleProvider from 'next-auth/providers/google'
 import FacebookProvider from 'next-auth/providers/facebook'
 import { MongoDBAdapter } from '@next-auth/mongodb-adapter'
-import { MongoClient } from 'mongodb'
+// Dynamic import - will be loaded at runtime
 import { User } from '@/lib/mongoose'
 import { verifyPassword } from '@/lib/auth'
 import dbConnect from '@/lib/mongoose'
 
-const client = new MongoClient(process.env.MONGODB_URI!)
-const clientPromise = client.connect()
+// Create MongoDB client only if URI is available
+let clientPromise: Promise<any> | null = null
+
+if (process.env.MONGODB_URI) {
+  const { MongoClient } = require('mongodb')
+  const client = new MongoClient(process.env.MONGODB_URI!)
+  clientPromise = client.connect()
+}
 
 export const authOptions: AuthOptions = {
-  adapter: MongoDBAdapter(clientPromise),
+  adapter: clientPromise ? MongoDBAdapter(clientPromise) : undefined,
   providers: [
     CredentialsProvider({
       name: 'credentials',

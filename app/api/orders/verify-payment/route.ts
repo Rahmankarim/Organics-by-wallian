@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getUserFromRequest } from '@/lib/auth'
 import crypto from 'crypto'
-import { ObjectId } from 'mongodb'
+// Dynamic import - will be loaded at runtime
 
 export async function POST(request: NextRequest) {
   try {
@@ -15,6 +15,7 @@ export async function POST(request: NextRequest) {
 
     // Import MongoDB client only when needed
     const { default: clientPromise } = await import('@/lib/mongodb')
+    const { ObjectId } = await import('mongodb')
     
     const user = await getUserFromRequest(request)
     if (!user) {
