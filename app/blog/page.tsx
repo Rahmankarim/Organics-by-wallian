@@ -47,22 +47,20 @@ export default function BlogPage() {
   useEffect(() => {
     const fetchPosts = async () => {
       try {
-        setLoading(true)
         const response = await fetch("/api/blog")
         const data = await response.json()
 
         if (response.ok && data.posts) {
-          setPosts(data.posts)
-          setFilteredPosts(data.posts)
-        } else {
-          console.error("Failed to fetch posts:", data.error)
-          setPosts([])
-          setFilteredPosts([])
+          const formattedPosts = data.posts.map((post: any) => ({
+            ...post,
+            _id: post._id?.toString() || Math.random().toString(),
+            publishedAt: new Date(post.publishedAt).toLocaleDateString(),
+          }))
+          setPosts(formattedPosts)
+          setFilteredPosts(formattedPosts)
         }
       } catch (error) {
         console.error("Error fetching blog posts:", error)
-        setPosts([])
-        setFilteredPosts([])
       } finally {
         setLoading(false)
       }
@@ -85,20 +83,14 @@ export default function BlogPage() {
         (post) =>
           post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
           post.excerpt.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          post.tags.some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+          post.tags.some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase())),
       )
     }
 
     setFilteredPosts(filtered)
   }, [posts, selectedCategory, searchQuery])
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    })
-  }
+  const featuredPost = posts[0]
 
   if (loading) {
     return (
@@ -108,7 +100,254 @@ export default function BlogPage() {
           <div className="flex justify-center items-center h-64">
             <div className="text-center">
               <div className="w-16 h-16 border-4 border-[#355E3B] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-              <p className="text-[#6F4E37]">Loading health articles...</p>
+              <p className="text-[#6F4E37]">Loading health tips...</p>
+            </div>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen bg-[#F4EBD0]">
+      <Header />
+      
+      {/* Hero Section */}
+      <section className="py-16 bg-gradient-to-br from-[#355E3B] to-[#4A7C59]">
+        <div className="container mx-auto px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="text-center text-white"
+          >
+            <h1 className="text-5xl font-bold mb-6">Health & Nutrition Blog</h1>
+            <p className="text-xl mb-8 max-w-2xl mx-auto">
+              Discover the amazing health benefits of organic dry fruits and nuts. 
+              Learn how to incorporate these superfoods into your daily life.
+            </p>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Featured Post Section */}
+      {featuredPost && (
+        <section className="py-16">
+          <div className="container mx-auto px-4">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="mb-12"
+            >
+              <h2 className="text-3xl font-bold text-[#355E3B] mb-8 text-center">Featured Article</h2>
+              <Card className="overflow-hidden bg-white shadow-xl">
+                <div className="md:flex">
+                  <div className="md:w-1/2">
+                    <Image
+                      src={featuredPost.featuredImage}
+                      alt={featuredPost.title}
+                      width={600}
+                      height={400}
+                      className="w-full h-64 md:h-full object-cover"
+                    />
+                  </div>
+                  <div className="md:w-1/2 p-8">
+                    <Badge className="mb-4 bg-[#355E3B] text-white">
+                      {featuredPost.category}
+                    </Badge>
+                    <h3 className="text-2xl font-bold text-[#355E3B] mb-4">
+                      {featuredPost.title}
+                    </h3>
+                    <p className="text-[#6F4E37] mb-6">
+                      {featuredPost.excerpt}
+                    </p>
+                    <div className="flex items-center gap-4 text-sm text-[#8B4513] mb-6">
+                      <div className="flex items-center gap-1">
+                        <User className="w-4 h-4" />
+                        {featuredPost.author}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Calendar className="w-4 h-4" />
+                        {featuredPost.publishedAt}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Clock className="w-4 h-4" />
+                        {featuredPost.readTime} min read
+                      </div>
+                    </div>
+                    <Link href={`/blog/${featuredPost.slug}`}>
+                      <Button className="bg-[#355E3B] hover:bg-[#4A7C59] text-white">
+                        Read Full Article
+                        <ArrowRight className="w-4 h-4 ml-2" />
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+              </Card>
+            </motion.div>
+          </div>
+        </section>
+      )}
+
+      {/* Filters Section */}
+      <section className="py-8 border-b border-[#D2B48C]">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+            <div className="flex flex-wrap gap-2">
+              {categories.map((category) => {
+                const IconComponent = category.icon
+                return (
+                  <Button
+                    key={category.id}
+                    variant={selectedCategory === category.id ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setSelectedCategory(category.id)}
+                    className={`${
+                      selectedCategory === category.id
+                        ? "bg-[#355E3B] text-white"
+                        : "border-[#355E3B] text-[#355E3B] hover:bg-[#355E3B] hover:text-white"
+                    }`}
+                  >
+                    <IconComponent className="w-4 h-4 mr-2" />
+                    {category.name}
+                  </Button>
+                )
+              })}
+            </div>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#8B4513] w-4 h-4" />
+              <Input
+                placeholder="Search articles..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 w-64 border-[#D2B48C] focus:border-[#355E3B]"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Blog Posts Grid */}
+      <section className="py-16">
+        <div className="container mx-auto px-4">
+          {filteredPosts.length === 0 ? (
+            <div className="text-center py-16">
+              <BookOpen className="w-16 h-16 text-[#D2B48C] mx-auto mb-4" />
+              <h3 className="text-2xl font-bold text-[#355E3B] mb-2">No articles found</h3>
+              <p className="text-[#6F4E37]">Try adjusting your search or filter criteria.</p>
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {filteredPosts.slice(1).map((post, index) => (
+                <motion.div
+                  key={post._id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: index * 0.1 }}
+                >
+                  <Card className="h-full overflow-hidden bg-white shadow-lg hover:shadow-xl transition-shadow duration-300">
+                    <div className="relative">
+                      <Image
+                        src={post.featuredImage}
+                        alt={post.title}
+                        width={400}
+                        height={250}
+                        className="w-full h-48 object-cover"
+                      />
+                      <Badge className="absolute top-4 left-4 bg-[#355E3B] text-white">
+                        {post.category}
+                      </Badge>
+                    </div>
+                    <CardContent className="p-6">
+                      <h3 className="text-xl font-bold text-[#355E3B] mb-3 line-clamp-2">
+                        {post.title}
+                      </h3>
+                      <p className="text-[#6F4E37] mb-4 line-clamp-3">
+                        {post.excerpt}
+                      </p>
+                      <div className="flex items-center gap-4 text-sm text-[#8B4513] mb-4">
+                        <div className="flex items-center gap-1">
+                          <User className="w-4 h-4" />
+                          {post.author}
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Clock className="w-4 h-4" />
+                          {post.readTime} min
+                        </div>
+                      </div>
+                      <div className="flex flex-wrap gap-1 mb-4">
+                        {post.tags.slice(0, 3).map((tag, tagIndex) => (
+                          <Badge key={tagIndex} variant="secondary" className="text-xs">
+                            {tag}
+                          </Badge>
+                        ))}
+                      </div>
+                      <Link href={`/blog/${post.slug}`}>
+                        <Button className="w-full bg-[#355E3B] hover:bg-[#4A7C59] text-white">
+                          Read More
+                          <ArrowRight className="w-4 h-4 ml-2" />
+                        </Button>
+                      </Link>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+      <Footer />
+    </div>
+  )
+}
+          setPosts(data.posts)
+          setFilteredPosts(data.posts)
+        }
+      } catch (error) {
+        console.error("Error fetching blog posts:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchPosts()
+  }, [])
+
+  useEffect(() => {
+    let filtered = posts
+
+    // Filter by category
+    if (selectedCategory !== "all") {
+      filtered = filtered.filter((post) => post.category === selectedCategory)
+    }
+
+    // Filter by search query
+    if (searchQuery) {
+      filtered = filtered.filter(
+        (post) =>
+          post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          post.excerpt.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          post.tags.some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase())),
+      )
+    }
+
+    setFilteredPosts(filtered)
+  }, [posts, selectedCategory, searchQuery])
+
+  const featuredPost = posts[0]
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#F4EBD0]">
+        <Header />
+        <div className="container mx-auto px-4 py-16">
+          <div className="flex justify-center items-center h-64">
+            <div className="text-center">
+              <div className="w-16 h-16 border-4 border-[#355E3B] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+              <p className="text-[#6F4E37]">Loading health tips...</p>
             </div>
           </div>
         </div>
@@ -121,159 +360,202 @@ export default function BlogPage() {
     <div className="min-h-screen bg-[#F4EBD0]">
       <Header />
 
-      {/* Hero Section */}
-      <section className="py-16 bg-gradient-to-br from-[#355E3B] to-[#6F4E37]">
+      {/* Page Header */}
+      <section className="bg-[#355E3B] text-white py-16">
         <div className="container mx-auto px-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="text-center text-white"
+            transition={{ duration: 0.8 }}
+            className="text-center"
           >
-            <h1 className="text-5xl font-bold mb-6">Health & Nutrition Blog</h1>
-            <p className="text-xl text-[#F4EBD0] max-w-3xl mx-auto">
-              Discover the incredible health benefits of premium dry fruits and nuts. 
-              Expert insights, nutritional science, and practical tips for a healthier lifestyle.
+            <h1 className="text-4xl md:text-5xl font-serif font-bold mb-4">Health Tips & Nutrition Guide</h1>
+            <p className="text-xl text-gray-200 max-w-2xl mx-auto">
+              Discover the incredible health benefits of organic dry fruits and learn how to incorporate them into your
+              daily life for optimal wellness.
             </p>
           </motion.div>
         </div>
       </section>
 
-      {/* Filter Section */}
-      <section className="py-8 bg-white shadow-sm">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-            {/* Search */}
-            <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+      <div className="container mx-auto px-4 py-16">
+        {/* Featured Article */}
+        {featuredPost && (
+          <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="mb-16"
+          >
+            <h2 className="text-3xl font-serif font-bold text-[#355E3B] mb-8 text-center">Featured Article</h2>
+            <Card className="overflow-hidden shadow-2xl bg-white">
+              <div className="grid grid-cols-1 lg:grid-cols-2">
+                <div className="relative h-64 lg:h-auto">
+                  <Image
+                    src={featuredPost.image || "/placeholder.svg"}
+                    alt={featuredPost.title}
+                    fill
+                    className="object-cover"
+                  />
+                  <Badge className="absolute top-4 left-4 bg-[#D4AF37] text-[#355E3B]">Featured</Badge>
+                </div>
+                <div className="p-8 flex flex-col justify-center">
+                  <div className="flex items-center gap-4 mb-4 text-sm text-[#6F4E37]">
+                    <Badge className="bg-[#355E3B] text-white">{featuredPost.category}</Badge>
+                    <span className="flex items-center gap-1">
+                      <Calendar className="w-4 h-4" />
+                      {new Date(featuredPost.publishedAt).toLocaleDateString()}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Clock className="w-4 h-4" />
+                      {featuredPost.readTime} min read
+                    </span>
+                  </div>
+                  <h3 className="text-2xl md:text-3xl font-serif font-bold text-[#355E3B] mb-4">
+                    {featuredPost.title}
+                  </h3>
+                  <p className="text-[#6F4E37] leading-relaxed mb-6">{featuredPost.excerpt}</p>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <User className="w-4 h-4 text-[#6F4E37]" />
+                      <span className="text-[#6F4E37]">{featuredPost.author}</span>
+                    </div>
+                    <Button className="bg-[#355E3B] hover:bg-[#2A4A2F] text-white" asChild>
+                      <Link href={`/blog/${featuredPost.id}`}>
+                        Read More
+                        <ArrowRight className="w-4 h-4 ml-2" />
+                      </Link>
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </motion.section>
+        )}
+
+        {/* Filters */}
+        <div className="flex flex-col md:flex-row gap-4 mb-8">
+          <div className="flex-1">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#6F4E37] w-4 h-4" />
               <Input
-                placeholder="Search articles..."
+                placeholder="Search health tips and articles..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
+                className="pl-10 border-[#355E3B]/20 focus:border-[#D4AF37] bg-white"
               />
             </div>
-
-            {/* Category Filter */}
-            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-              <SelectTrigger className="w-full md:w-48">
-                <SelectValue placeholder="Select category" />
-              </SelectTrigger>
-              <SelectContent>
-                {categories.map((category) => (
-                  <SelectItem key={category.id} value={category.id}>
-                    <div className="flex items-center gap-2">
-                      <category.icon className="h-4 w-4" />
-                      {category.name}
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
           </div>
-        </div>
-      </section>
-
-      {/* Blog Posts Grid */}
-      <section className="py-16">
-        <div className="container mx-auto px-4">
-          {filteredPosts.length === 0 ? (
-            <div className="text-center py-16">
-              <BookOpen className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-2xl font-semibold text-[#355E3B] mb-2">
-                {searchQuery || selectedCategory !== "all" ? "No articles found" : "No articles available"}
-              </h3>
-              <p className="text-[#6F4E37] mb-6">
-                {searchQuery || selectedCategory !== "all"
-                  ? "Try adjusting your search or filter criteria"
-                  : "Check back soon for new health articles"}
-              </p>
-              {(searchQuery || selectedCategory !== "all") && (
-                <Button
-                  onClick={() => {
-                    setSearchQuery("")
-                    setSelectedCategory("all")
-                  }}
-                  variant="outline"
-                >
-                  Clear Filters
-                </Button>
-              )}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {filteredPosts.map((post, index) => (
-                <motion.div
-                  key={post._id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: index * 0.1 }}
-                >
-                  <Card className="h-full hover:shadow-lg transition-shadow duration-300 overflow-hidden">
-                    <div className="relative h-48 overflow-hidden">
-                      <Image
-                        src={post.featuredImage}
-                        alt={post.title}
-                        fill
-                        className="object-cover hover:scale-105 transition-transform duration-300"
-                      />
-                      <div className="absolute top-4 left-4">
-                        <Badge variant="secondary" className="bg-[#355E3B] text-white">
-                          {post.category}
-                        </Badge>
-                      </div>
-                    </div>
-                    <CardContent className="p-6">
-                      <div className="flex items-center gap-4 text-sm text-[#6F4E37] mb-3">
-                        <div className="flex items-center gap-1">
-                          <Calendar className="h-4 w-4" />
-                          {formatDate(post.publishedAt)}
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Clock className="h-4 w-4" />
-                          {post.readTime} min read
-                        </div>
-                      </div>
-                      
-                      <h3 className="text-xl font-semibold text-[#355E3B] mb-3 line-clamp-2">
-                        {post.title}
-                      </h3>
-                      
-                      <p className="text-[#6F4E37] mb-4 line-clamp-3">
-                        {post.excerpt}
-                      </p>
-                      
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 text-sm text-[#6F4E37]">
-                          <User className="h-4 w-4" />
-                          {post.author}
-                        </div>
-                        
-                        <Button asChild size="sm" className="bg-[#355E3B] hover:bg-[#6F4E37]">
-                          <Link href={`/blog/${post.slug}`}>
-                            Read More
-                            <ArrowRight className="ml-2 h-4 w-4" />
-                          </Link>
-                        </Button>
-                      </div>
-                      
-                      {post.tags && post.tags.length > 0 && (
-                        <div className="flex flex-wrap gap-2 mt-4">
-                          {post.tags.slice(0, 3).map((tag) => (
-                            <Badge key={tag} variant="outline" className="text-xs">
-                              {tag}
-                            </Badge>
-                          ))}
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                </motion.div>
+          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+            <SelectTrigger className="w-full md:w-48 border-[#355E3B]/20 focus:border-[#D4AF37] bg-white">
+              <SelectValue placeholder="All Categories" />
+            </SelectTrigger>
+            <SelectContent>
+              {categories.map((category) => (
+                <SelectItem key={category.id} value={category.id}>
+                  <div className="flex items-center gap-2">
+                    <category.icon className="w-4 h-4" />
+                    {category.name}
+                  </div>
+                </SelectItem>
               ))}
-            </div>
-          )}
+            </SelectContent>
+          </Select>
         </div>
-      </section>
+
+        {/* Articles Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {filteredPosts.slice(1).map((post, index) => (
+            <motion.div
+              key={post.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: index * 0.1 }}
+            >
+              <Card className="h-full overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 bg-white group">
+                <div className="relative h-48">
+                  <Image
+                    src={post.image || "/placeholder.svg"}
+                    alt={post.title}
+                    fill
+                    className="object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                  <Badge className="absolute top-3 left-3 bg-[#355E3B] text-white">{post.category}</Badge>
+                </div>
+
+                <CardContent className="p-6 flex flex-col h-full">
+                  <div className="flex items-center gap-4 mb-3 text-sm text-[#6F4E37]">
+                    <span className="flex items-center gap-1">
+                      <Calendar className="w-4 h-4" />
+                      {new Date(post.publishedAt).toLocaleDateString()}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Clock className="w-4 h-4" />
+                      {post.readTime} min
+                    </span>
+                  </div>
+
+                  <h3 className="text-xl font-semibold text-[#355E3B] mb-3 line-clamp-2">{post.title}</h3>
+                  <p className="text-[#6F4E37] leading-relaxed mb-4 flex-1 line-clamp-3">{post.excerpt}</p>
+
+                  <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                    <div className="flex items-center gap-2">
+                      <User className="w-4 h-4 text-[#6F4E37]" />
+                      <span className="text-sm text-[#6F4E37]">{post.author}</span>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="border-[#355E3B] text-[#355E3B] hover:bg-[#355E3B] hover:text-white bg-transparent"
+                      asChild
+                    >
+                      <Link href={`/blog/${post.id}`}>Read More</Link>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* No Results */}
+        {filteredPosts.length === 0 && (
+          <div className="text-center py-16">
+            <div className="w-32 h-32 mx-auto mb-6 bg-white rounded-full flex items-center justify-center shadow-lg">
+              <Search className="w-16 h-16 text-[#6F4E37]" />
+            </div>
+            <h3 className="text-2xl font-semibold text-[#355E3B] mb-2">No articles found</h3>
+            <p className="text-[#6F4E37] mb-6">Try adjusting your search terms or category filter</p>
+            <Button
+              onClick={() => {
+                setSelectedCategory("all")
+                setSearchQuery("")
+              }}
+              className="bg-[#355E3B] hover:bg-[#2A4A2F] text-white"
+            >
+              Clear Filters
+            </Button>
+          </div>
+        )}
+
+        {/* Newsletter Signup */}
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          className="mt-16 bg-[#355E3B] rounded-2xl p-8 text-white text-center"
+        >
+          <h2 className="text-3xl font-serif font-bold mb-4">Stay Updated with Health Tips</h2>
+          <p className="text-xl text-gray-200 mb-8 max-w-2xl mx-auto">
+            Subscribe to our newsletter and get the latest health tips, nutrition advice, and wellness guides delivered
+            to your inbox.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
+            <Input type="email" placeholder="Enter your email" className="flex-1 bg-white text-[#355E3B] border-0" />
+            <Button className="bg-[#D4AF37] hover:bg-[#B8941F] text-[#355E3B] font-semibold">Subscribe</Button>
+          </div>
+        </motion.section>
+      </div>
 
       <Footer />
     </div>

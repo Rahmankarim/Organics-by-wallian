@@ -3,6 +3,10 @@ import { verifyToken } from '@/lib/auth-middleware'
 import dbConnect from '@/lib/mongoose'
 import { User } from '@/lib/mongoose'
 
+// Route segment config to prevent static analysis during build
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
+
 export async function GET(request: NextRequest) {
   try {
     // Get token from Authorization header

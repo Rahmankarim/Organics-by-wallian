@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, Suspense } from 'react'
 import { usePathname, useSearchParams } from 'next/navigation'
 
 // Google Analytics tracking ID
@@ -26,8 +26,8 @@ export const trackEvent = (action: string, category: string, label?: string, val
   }
 }
 
-// Analytics provider component
-export default function Analytics() {
+// Internal analytics component that uses useSearchParams
+function AnalyticsInternal() {
   const pathname = usePathname()
   const searchParams = useSearchParams()
 
@@ -38,6 +38,11 @@ export default function Analytics() {
     }
   }, [pathname, searchParams])
 
+  return null
+}
+
+// Analytics provider component with Suspense boundary
+export default function Analytics() {
   // Only render script tags if GA_TRACKING_ID is provided
   if (!GA_TRACKING_ID) return null
 
@@ -59,6 +64,9 @@ export default function Analytics() {
           `,
         }}
       />
+      <Suspense fallback={null}>
+        <AnalyticsInternal />
+      </Suspense>
     </>
   )
 }
