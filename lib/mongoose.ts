@@ -21,8 +21,12 @@ import {
 // Database connection
 const MONGODB_URI = process.env.MONGODB_URI
 
-if (!MONGODB_URI) {
-  throw new Error('Please define the MONGODB_URI environment variable inside .env.local')
+// Only check for MONGODB_URI at runtime, not during build
+function checkMongoURI() {
+  if (!MONGODB_URI) {
+    throw new Error('Please define the MONGODB_URI environment variable inside .env.local')
+  }
+  return MONGODB_URI
 }
 
 interface MongooseCache {
@@ -46,11 +50,12 @@ async function dbConnect() {
   }
 
   if (!cached.promise) {
+    const mongoUri = checkMongoURI() // Check URI only when actually connecting
     const opts = {
       bufferCommands: false,
     }
 
-    cached.promise = mongoose.connect(MONGODB_URI!, opts)
+    cached.promise = mongoose.connect(mongoUri, opts)
   }
 
   try {
