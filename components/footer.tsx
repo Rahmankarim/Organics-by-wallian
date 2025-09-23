@@ -32,12 +32,12 @@ export function Footer() {
               </div>
               <div>
                 <h3 className="text-xl font-serif font-bold">Organic by Wallian</h3>
-                <p className="text-sm text-gray-300">Premium Dry Fruits</p>
+                <p className="text-sm text-gray-300">Premium Organic Products</p>
               </div>
             </div>
             <p className="text-gray-300 leading-relaxed">
-              We source the finest organic dry fruits directly from premium orchards across India, ensuring exceptional
-              quality and freshness in every bite.
+              We source the finest organic products directly from premium sources across Pakistan, ensuring exceptional
+              quality and freshness.
             </p>
             <div className="flex gap-4">
               <Button size="icon" variant="ghost" className="text-gray-300 hover:text-[#D4AF37] hover:bg-white/10">
