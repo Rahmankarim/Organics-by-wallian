@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
       .exec()
 
     return NextResponse.json({
-      orders: orders.map(order => ({
+  orders: orders.map((order: any) => ({
         id: order._id,
         orderNumber: order.orderNumber,
         status: order.status,

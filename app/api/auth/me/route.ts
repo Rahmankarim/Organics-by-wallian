@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
     await dbConnect()
 
     // Find user by ID
-    const user = await User.findById(decoded.userId).select('-password')
+  const user = await User.findById((await decoded)?.userId).select('-password')
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
