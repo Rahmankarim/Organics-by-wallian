@@ -1,4 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 // Dynamic import - will be loaded at runtime
 import type { IBlogPost } from "@/lib/models"
 
