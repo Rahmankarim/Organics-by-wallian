@@ -7,7 +7,7 @@ export const runtime = 'nodejs'
 // Sample orders data for initialization
 const sampleOrders: IOrder[] = [
   {
-    id: "ORD-001",
+    orderNumber: "ORD-001",
     userId: "demo-user",
     items: [
       {
@@ -25,22 +25,36 @@ const sampleOrders: IOrder[] = [
         image: "/placeholder.svg?height=100&width=100",
       },
     ],
+    subtotal: 2197,
+    tax: 100,
+    shippingCost: 50,
+    discount: 0,
     total: 3097,
-    status: "Delivered",
-    deliveryAddress: {
-      id: "1",
-      type: "Home",
-      name: "Priya Sharma",
-      address: "123 Green Valley Apartments, Sector 15, Mumbai, Maharashtra 400001",
-      phone: "+91 98765 43210",
-      isDefault: true,
-    },
+    status: "delivered",
+    paymentStatus: "succeeded",
     paymentMethod: "Credit Card",
+    paymentIntentId: "pi_1234567890",
+    shippingAddress: {
+      type: 'home',
+      firstName: 'Rahman',
+      lastName: 'Karim',
+      address: '123 Main St',
+      city: 'Mumbai',
+      state: 'MH',
+      zipCode: '400001',
+      country: 'India',
+      phone: '+911234567890',
+      isDefault: true
+    },
     trackingNumber: "TRK123456789",
+    shippingProvider: "DHL",
+    estimatedDelivery: new Date("2024-01-20"),
+    notes: "",
     createdAt: new Date("2024-01-15"),
+    updatedAt: new Date("2024-01-15"),
   },
   {
-    id: "ORD-002",
+    orderNumber: "ORD-002",
     userId: "demo-user-2",
     items: [
       {
@@ -51,22 +65,36 @@ const sampleOrders: IOrder[] = [
         image: "/placeholder.svg?height=100&width=100",
       },
     ],
+    subtotal: 1647,
+    tax: 100,
+    shippingCost: 50,
+    discount: 0,
     total: 1947,
-    status: "Shipped",
-    deliveryAddress: {
-      id: "2",
-      type: "Office",
-      name: "Rajesh Kumar",
-      address: "456 Business Park, Andheri East, Mumbai, Maharashtra 400069",
-      phone: "+91 98765 43211",
-      isDefault: false,
-    },
+    status: "shipped",
+    paymentStatus: "succeeded",
     paymentMethod: "UPI",
+    paymentIntentId: "pi_9876543210",
+    shippingAddress: {
+      type: 'home',
+      firstName: 'Ali',
+      lastName: 'Khan',
+      address: '456 Market Rd',
+      city: 'Delhi',
+      state: 'DL',
+      zipCode: '110001',
+      country: 'India',
+      phone: '+919876543210',
+      isDefault: true
+    },
     trackingNumber: "TRK987654321",
+    shippingProvider: "FedEx",
+    estimatedDelivery: new Date("2024-01-15"),
+    notes: "",
     createdAt: new Date("2024-01-10"),
+    updatedAt: new Date("2024-01-10"),
   },
   {
-    id: "ORD-003",
+    orderNumber: "ORD-003",
     userId: "demo-user-3",
     items: [
       {
@@ -77,21 +105,36 @@ const sampleOrders: IOrder[] = [
         image: "/placeholder.svg?height=100&width=100",
       },
     ],
+    subtotal: 1398,
+    tax: 100,
+    shippingCost: 50,
+    discount: 0,
     total: 1598,
-    status: "Processing",
-    deliveryAddress: {
-      id: "3",
-      type: "Home",
-      name: "Anita Patel",
-      address: "789 Residential Complex, Bandra West, Mumbai, Maharashtra 400050",
-      phone: "+91 98765 43212",
-      isDefault: true,
-    },
+    status: "processing",
+    paymentStatus: "pending",
     paymentMethod: "Credit Card",
+    paymentIntentId: "pi_5555555555",
+    shippingAddress: {
+      type: 'home',
+      firstName: 'Sara',
+      lastName: 'Ahmed',
+      address: '789 Park Ave',
+      city: 'Bangalore',
+      state: 'KA',
+      zipCode: '560001',
+      country: 'India',
+      phone: '+911122334455',
+      isDefault: true
+    },
+    trackingNumber: "TRK555555555",
+    shippingProvider: "BlueDart",
+    estimatedDelivery: new Date("2024-01-10"),
+    notes: "",
     createdAt: new Date("2024-01-05"),
+    updatedAt: new Date("2024-01-05"),
   },
   {
-    id: "ORD-004",
+    orderNumber: "ORD-004",
     userId: "demo-user-4",
     items: [
       {
@@ -109,18 +152,33 @@ const sampleOrders: IOrder[] = [
         image: "/placeholder.svg?height=100&width=100",
       },
     ],
+    subtotal: 2848,
+    tax: 100,
+    shippingCost: 50,
+    discount: 0,
     total: 2998,
-    status: "Pending",
-    deliveryAddress: {
-      id: "4",
-      type: "Home",
-      name: "Vikram Singh",
-      address: "321 Garden View, Powai, Mumbai, Maharashtra 400076",
-      phone: "+91 98765 43213",
-      isDefault: true,
-    },
+    status: "pending",
+    paymentStatus: "pending",
     paymentMethod: "UPI",
+    paymentIntentId: "pi_4444444444",
+    shippingAddress: {
+      type: 'home',
+      firstName: 'Fatima',
+      lastName: 'Noor',
+      address: '321 Lake View',
+      city: 'Hyderabad',
+      state: 'TS',
+      zipCode: '500001',
+      country: 'India',
+      phone: '+919876543219',
+      isDefault: true
+    },
+    trackingNumber: "TRK444444444",
+    shippingProvider: "IndiaPost",
+    estimatedDelivery: new Date("2024-01-08"),
+    notes: "",
     createdAt: new Date("2024-01-03"),
+    updatedAt: new Date("2024-01-03"),
   },
 ]
 
@@ -142,7 +200,15 @@ export async function GET(request: NextRequest) {
     // Initialize with sample data if empty
     const count = await db.collection("orders").countDocuments()
     if (count === 0) {
-      await db.collection("orders").insertMany(sampleOrders)
+      // Remove _id if it's a string to let MongoDB generate ObjectId
+      const fixedOrders = sampleOrders.map(order => {
+        if (order._id && typeof order._id === 'string') {
+          const { _id, ...rest } = order;
+          return rest;
+        }
+        return order;
+      });
+      await db.collection("orders").insertMany(fixedOrders)
     }
 
     const url = new URL(request.url)

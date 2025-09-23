@@ -78,7 +78,9 @@ async function dbConnect() {
       waitQueueTimeoutMS: 5000,
     }
 
-    cached.promise = mongoose.connect(mongoUri, opts)
+  // Remove 'w' property if present and ensure options match ConnectOptions
+  const { w, ...restOpts } = opts as any;
+  cached.promise = mongoose.connect(mongoUri, restOpts)
   }
 
   try {
