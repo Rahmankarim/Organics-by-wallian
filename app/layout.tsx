@@ -27,7 +27,7 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "Organic Orchard - Premium Dry Fruits | Nature's Richest, Delivered to Your Door",
   description:
-    "Discover our curated collection of premium organic dry fruits, sourced directly from the finest orchards across India. 100% organic, premium quality, fast delivery.",
+    "Discover our curated collection of premium organic dry fruits, sourced directly from the finest orchards across Pakistan. 100% organic, premium quality, fast delivery.",
   keywords:
     "organic dry fruits, premium almonds, kashmiri almonds, pistachios, dates, walnuts, cashews, healthy snacks, organic food",
   authors: [{ name: "Organic Orchard" }],

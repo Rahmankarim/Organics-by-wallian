@@ -135,7 +135,7 @@ export default function HomePage() {
               className="text-xl md:text-2xl mb-8 text-gray-200 max-w-2xl mx-auto"
             >
               Discover our curated collection of premium organic dry fruits, sourced directly from the finest orchards
-              across India.
+              across Pakistan.
             </motion.p>
 
             <motion.div
