@@ -48,64 +48,32 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Hash password
-    const hashedPassword = await hashPassword(password)
-
     // Generate email verification token
     const emailVerificationToken = Math.random().toString(36).substring(2, 15) + 
                                    Math.random().toString(36).substring(2, 15)
 
-    // In development, auto-verify emails. In production, require email verification
-    const isEmailVerified = process.env.NODE_ENV === 'development' ? true : false
+    // Hash password
+    const hashedPassword = await hashPassword(password)
 
-    // Create user
-    const newUser = await User.create({
-      firstName: firstName.trim(),
-      lastName: lastName.trim(),
-      email: email.toLowerCase().trim(),
+    // Create user in DB with isEmailVerified: false
+    const newUser = new User({
+      firstName,
+      lastName,
+      email: email.toLowerCase(),
       password: hashedPassword,
-      phone: phone?.trim(),
-      role: 'customer',
-      isEmailVerified,
-      emailVerificationToken: isEmailVerified ? null : emailVerificationToken,
-      preferences: {
-        newsletter: true,
-        smsNotifications: false,
-        language: 'en',
-        currency: 'INR',
-        dietaryRestrictions: []
-      },
-      addresses: [],
-      twoFactorEnabled: false,
-      createdAt: new Date(),
-      updatedAt: new Date()
+      phone,
+      isEmailVerified: false,
+      emailVerificationToken
     })
+    await newUser.save()
 
-    // Remove sensitive data from response
-    const userResponse = {
-      id: newUser._id,
-      firstName: newUser.firstName,
-      lastName: newUser.lastName,
-      email: newUser.email,
-      phone: newUser.phone,
-      role: newUser.role,
-      isEmailVerified: newUser.isEmailVerified
-    }
+    // Send verification email
+    const { sendVerificationEmail } = await import('@/lib/email')
+    await sendVerificationEmail(email, emailVerificationToken)
 
-    // Send verification email only in production
-    if (process.env.NODE_ENV === 'production' && !isEmailVerified) {
-      // TODO: Send verification email here
-      // await sendVerificationEmail(newUser.email, emailVerificationToken)
-      return NextResponse.json({
-        message: 'Account created successfully. Please check your email for verification.',
-        user: userResponse
-      }, { status: 201 })
-    } else {
-      return NextResponse.json({
-        message: 'Account created successfully and automatically verified in development mode.',
-        user: userResponse
-      }, { status: 201 })
-    }
+    return NextResponse.json({
+      message: 'Verification email sent. Please check your email to verify your account.'
+    }, { status: 200 })
 
   } catch (error) {
     console.error('Signup error:', error)

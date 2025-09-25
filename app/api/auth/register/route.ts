@@ -39,10 +39,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate password strength
-    const passwordValidation = validatePassword(password)
-    if (!passwordValidation.isValid) {
+    const isPasswordValid = validatePassword(password)
+    if (!isPasswordValid) {
       return NextResponse.json(
-        { error: 'Password requirements not met', details: passwordValidation.errors },
+        { error: 'Password must be at least 8 characters and include uppercase, lowercase, number, and special character.' },
         { status: 400 }
       )
     }
@@ -58,46 +58,35 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Hash password
-    const hashedPassword = await hashPassword(password)
 
     // Generate email verification token
     const emailVerificationToken = generateSecureToken()
 
-    // Create new user
-    const newUser = await User.create({
-      email: sanitizedEmail,
-      password: hashedPassword,
+    // Hash password
+    const hashedPassword = await hashPassword(password)
+
+    // Create user in DB with isEmailVerified: false
+    const newUser = new User({
       firstName: sanitizedFirstName,
       lastName: sanitizedLastName,
+      email: sanitizedEmail,
+      password: hashedPassword,
       phone: sanitizedPhone,
-      emailVerificationToken,
       isEmailVerified: false,
-      role: 'customer',
-      preferences: {
-        newsletter: true,
-        smsNotifications: false,
-        language: 'en',
-        currency: 'INR',
-        dietaryRestrictions: []
-      }
+      emailVerificationToken
     })
+    await newUser.save()
 
-    // TODO: Send verification email
-    // await sendVerificationEmail(sanitizedEmail, emailVerificationToken)
+    // Send verification email
+    const { sendVerificationEmail } = await import('@/lib/email')
+    await sendVerificationEmail(sanitizedEmail, emailVerificationToken)
 
+    // Return response
     return NextResponse.json(
       {
-        message: 'User created successfully. Please check your email to verify your account.',
-        user: {
-          id: newUser._id,
-          email: newUser.email,
-          firstName: newUser.firstName,
-          lastName: newUser.lastName,
-          role: newUser.role
-        }
+        message: 'Verification email sent. Please check your email to verify your account.'
       },
-      { status: 201 }
+      { status: 200 }
     )
 
   } catch (error) {
