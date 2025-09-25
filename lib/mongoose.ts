@@ -179,7 +179,9 @@ const UserSchema = new mongoose.Schema<IUser>({
   avatar: { type: String },
   role: { type: String, enum: ['customer', 'admin', 'super_admin'], default: 'customer' },
   isEmailVerified: { type: Boolean, default: false },
-  emailVerificationToken: { type: String },
+  emailVerificationToken: { type: String }, // legacy, can be removed later
+  emailVerificationCode: { type: String }, // 6-digit code
+  emailVerificationCodeExpires: { type: Date },
   passwordResetToken: { type: String },
   passwordResetExpires: { type: Date },
   addresses: [AddressSchema],
