@@ -48,14 +48,14 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Generate email verification token
-    const emailVerificationToken = Math.random().toString(36).substring(2, 15) + 
-                                   Math.random().toString(36).substring(2, 15)
+    // Generate 6-digit code and expiry
+    const code = Math.floor(100000 + Math.random() * 900000).toString()
+    const codeExpires = new Date(Date.now() + 10 * 60 * 1000) // 10 minutes from now
 
     // Hash password
     const hashedPassword = await hashPassword(password)
 
-    // Create user in DB with isEmailVerified: false
+    // Create user in DB with isEmailVerified: false and code
     const newUser = new User({
       firstName,
       lastName,
@@ -63,16 +63,17 @@ export async function POST(request: NextRequest) {
       password: hashedPassword,
       phone,
       isEmailVerified: false,
-      emailVerificationToken
+      emailVerificationCode: code,
+      emailVerificationCodeExpires: codeExpires
     })
     await newUser.save()
 
-    // Send verification email
-    const { sendVerificationEmail } = await import('@/lib/email')
-    await sendVerificationEmail(email, emailVerificationToken)
+    // Send verification code email
+    const { sendVerificationCodeEmail } = await import('@/lib/email')
+    await sendVerificationCodeEmail(email, code)
 
     return NextResponse.json({
-      message: 'Verification email sent. Please check your email to verify your account.'
+      message: 'Verification code sent. Please check your email to verify your account.'
     }, { status: 200 })
 
   } catch (error) {

@@ -1,3 +1,37 @@
+// Send verification code email (6-digit code)
+export const sendVerificationCodeEmail = async (email: string, code: string): Promise<boolean> => {
+  try {
+    const transporter = createTransporter()
+    if (!transporter) {
+      console.log('Email service not configured. Skipping email send.')
+      return false
+    }
+    const mailOptions = {
+      from: `"Organic Orchard" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: 'Your Verification Code - Organic Orchard',
+      html: `
+        <div style="max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif;">
+          <div style="background-color: #355E3B; padding: 20px; text-align: center;">
+            <h1 style="color: white; margin: 0;">Organic Orchard</h1>
+            <p style="color: #D4AF37; margin: 5px 0;">Premium Dry Fruits</p>
+          </div>
+          <div style="padding: 30px 20px; background: #fff;">
+            <h2 style="color: #355E3B;">Your Verification Code</h2>
+            <p style="font-size: 1.2em;">Please use the following code to verify your email address:</p>
+            <div style="font-size: 2em; font-weight: bold; color: #D4AF37; margin: 20px 0; letter-spacing: 4px;">${code}</div>
+            <p style="color: #888;">This code will expire in 10 minutes.</p>
+          </div>
+        </div>
+      `
+    }
+    await transporter.sendMail(mailOptions)
+    return true
+  } catch (error) {
+    console.error('Error sending verification code email:', error)
+    return false
+  }
+}
 import nodemailer from 'nodemailer'
 
 interface EmailConfig {
