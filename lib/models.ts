@@ -62,6 +62,8 @@ export interface IUser {
   role: 'customer' | 'admin' | 'super_admin'
   isEmailVerified: boolean
   emailVerificationToken?: string
+  emailVerificationCode?: string
+  emailVerificationCodeExpires?: Date
   passwordResetToken?: string
   passwordResetExpires?: Date
   addresses: Address[]
