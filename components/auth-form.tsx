@@ -190,12 +190,14 @@ export default function AuthForm({ defaultTab = 'signin', onSuccess }: AuthFormP
         throw new Error(errorMessage)
       }
 
-      toast.success('Check Your Email!', {
-        description: data.message || 'Verification code sent to your email. Please check your inbox.'
+
+      toast.success('Account Created!', {
+        description: 'We sent you a verification code. Please check your email.'
       })
 
-      // Navigate to verification page with email as query parameter
-      router.push(`/verify?email=${encodeURIComponent(signupForm.email)}`)
+      // Redirect to verify-email page
+      router.push(`/verify-email?email=${encodeURIComponent(signupForm.email)}`)
+      
 
     } catch (error) {
       toast.error('Signup Failed', {
