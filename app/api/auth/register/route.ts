@@ -3,6 +3,7 @@ import { User } from '@/lib/mongoose'
 import { hashPassword, validateEmail, validatePassword, generateSecureToken, sanitizeInput } from '@/lib/auth'
 import dbConnect from '@/lib/mongoose'
 import { rateLimit } from '@/lib/auth'
+import { verificationCodes } from '@/lib/verification-store'
 
 // Rate limiting: 5 registration attempts per 15 minutes
 const registerRateLimit = rateLimit(5, 15 * 60 * 1000)
@@ -58,26 +59,22 @@ export async function POST(request: NextRequest) {
       )
     }
 
-
     // Generate 6-digit code and expiry
     const code = Math.floor(100000 + Math.random() * 900000).toString()
-    const codeExpires = new Date(Date.now() + 10 * 60 * 1000) // 10 minutes from now
+    const expires = Date.now() + 10 * 60 * 1000 // 10 minutes from now
 
-    // Hash password
-    const hashedPassword = await hashPassword(password)
-
-    // Create user in DB with isEmailVerified: false and code
-    const newUser = new User({
-      firstName: sanitizedFirstName,
-      lastName: sanitizedLastName,
-      email: sanitizedEmail,
-      password: hashedPassword,
-      phone: sanitizedPhone,
-      isEmailVerified: false,
-      emailVerificationCode: code,
-      emailVerificationCodeExpires: codeExpires
-    })
-    await newUser.save()
+    // Store user data and code in memory (don't create user yet)
+    verificationCodes[sanitizedEmail] = {
+      code,
+      expires,
+      userData: {
+        firstName: sanitizedFirstName,
+        lastName: sanitizedLastName,
+        email: sanitizedEmail,
+        password,
+        phone: sanitizedPhone
+      }
+    }
 
     // Send verification code email
     const { sendVerificationCodeEmail } = await import('@/lib/email')
