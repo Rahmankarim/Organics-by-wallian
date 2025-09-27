@@ -13,6 +13,15 @@ const nextConfig = {
     esmExternals: "loose",
     serverComponentsExternalPackages: ["mongoose"],
   },
+  async redirects() {
+    return [
+      { 
+        source: '/verify-email', 
+        destination: '/verify', 
+        permanent: true 
+      }
+    ];
+  },
   async headers() {
     return [
       {

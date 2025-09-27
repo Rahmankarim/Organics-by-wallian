@@ -54,6 +54,9 @@ const createTransporter = () => {
 // Send verification code email (6-digit code)
 export const sendVerificationCodeEmail = async (email: string, code: string): Promise<boolean> => {
   try {
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+    const verificationUrl = `${baseUrl}/verify?email=${encodeURIComponent(email)}&code=${code}`
+    
     // Try Resend first
     const resendClient = getResendClient()
     if (resendClient) {
@@ -72,6 +75,14 @@ export const sendVerificationCodeEmail = async (email: string, code: string): Pr
               <p style="font-size: 1.2em;">Please use the following code to verify your email address:</p>
               <div style="font-size: 2em; font-weight: bold; color: #D4AF37; margin: 20px 0; letter-spacing: 4px; text-align: center; padding: 20px; background: #f8f9fa; border: 2px dashed #D4AF37; border-radius: 8px;">${code}</div>
               <p style="color: #888;">This code will expire in 10 minutes.</p>
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="${verificationUrl}" style="background-color: #355E3B; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                  Verify Now
+                </a>
+              </div>
+              <p style="color: #666; font-size: 14px;">
+                Or copy and paste this link: <a href="${verificationUrl}" style="color: #355E3B;">${verificationUrl}</a>
+              </p>
               <p style="color: #666; font-size: 0.9em; margin-top: 20px;">If you didn't request this code, please ignore this email.</p>
             </div>
             <div style="background-color: #f8f9fa; padding: 15px; text-align: center; color: #666; font-size: 0.8em;">
@@ -113,6 +124,14 @@ export const sendVerificationCodeEmail = async (email: string, code: string): Pr
             <p style="font-size: 1.2em;">Please use the following code to verify your email address:</p>
             <div style="font-size: 2em; font-weight: bold; color: #D4AF37; margin: 20px 0; letter-spacing: 4px; text-align: center; padding: 20px; background: #f8f9fa; border: 2px dashed #D4AF37; border-radius: 8px;">${code}</div>
             <p style="color: #888;">This code will expire in 10 minutes.</p>
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${verificationUrl}" style="background-color: #355E3B; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                Verify Now
+              </a>
+            </div>
+            <p style="color: #666; font-size: 14px;">
+              Or copy and paste this link: <a href="${verificationUrl}" style="color: #355E3B;">${verificationUrl}</a>
+            </p>
           </div>
         </div>
       `

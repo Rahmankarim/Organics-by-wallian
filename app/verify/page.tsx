@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -12,21 +12,15 @@ function VerifyContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const emailFromUrl = searchParams.get('email') || ''
+  const codeFromUrl = searchParams.get('code') || ''
 
   const [email, setEmail] = useState(emailFromUrl)
-  const [verificationCode, setVerificationCode] = useState('')
+  const [verificationCode, setVerificationCode] = useState(codeFromUrl)
   const [loading, setLoading] = useState(false)
   const [resendLoading, setResendLoading] = useState(false)
 
-  useEffect(() => {
-    // If no email in URL, redirect back to signin
-    if (!emailFromUrl) {
-      router.push('/signin')
-    }
-  }, [emailFromUrl, router])
-
-  const handleVerification = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleVerification = useCallback(async (e?: React.FormEvent) => {
+    if (e) e.preventDefault()
     
     if (!email || !verificationCode) {
       toast.error('Missing Information', {
@@ -94,7 +88,7 @@ function VerifyContent() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [email, verificationCode, router])
 
   const handleResendCode = async () => {
     if (!email) {
@@ -134,6 +128,19 @@ function VerifyContent() {
       setResendLoading(false)
     }
   }
+
+  useEffect(() => {
+    // If no email in URL, redirect back to signin
+    if (!emailFromUrl) {
+      router.push('/signin')
+      return
+    }
+    
+    // If code is provided in URL, auto-verify
+    if (emailFromUrl && codeFromUrl && codeFromUrl.length === 6) {
+      handleVerification()
+    }
+  }, [emailFromUrl, codeFromUrl, handleVerification])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
