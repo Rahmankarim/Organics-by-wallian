@@ -10,3 +10,6 @@ export default function RegisterPage() {
   // Redirect to the new signup page
   redirect('/signup')
 }
+    </div>
+  )
+}

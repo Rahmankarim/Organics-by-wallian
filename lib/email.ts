@@ -1,8 +1,13 @@
 import { Resend } from 'resend'
 import nodemailer from 'nodemailer'
 
-// Initialize Resend
-const resend = new Resend(process.env.RESEND_API_KEY)
+// Initialize Resend only if API key is available
+const getResendClient = () => {
+  if (!process.env.RESEND_API_KEY) {
+    return null
+  }
+  return new Resend(process.env.RESEND_API_KEY)
+}
 
 interface EmailConfig {
   host: string
@@ -50,8 +55,9 @@ const createTransporter = () => {
 export const sendVerificationCodeEmail = async (email: string, code: string): Promise<boolean> => {
   try {
     // Try Resend first
-    if (process.env.RESEND_API_KEY) {
-      const { error } = await resend.emails.send({
+    const resendClient = getResendClient()
+    if (resendClient) {
+      const { error } = await resendClient.emails.send({
         from: process.env.FROM_EMAIL || 'onboarding@resend.dev',
         to: email,
         subject: 'Your Verification Code - Organics by Wallian',

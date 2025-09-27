@@ -65,7 +65,7 @@ export default function AuthForm({ defaultTab = 'signin', onSuccess }: AuthFormP
     setIsLoading(true)
 
     try {
-      const response = await fetch('/api/auth/signin', {
+      const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(signinForm),
@@ -74,18 +74,16 @@ export default function AuthForm({ defaultTab = 'signin', onSuccess }: AuthFormP
 
       const data = await response.json()
 
-      if (!response.ok) {
+      if (!data.success) {
         // Show specific error messages
-        let errorMessage = 'An error occurred during signin'
+        let errorMessage = data.message || 'An error occurred during signin'
         
         if (response.status === 401) {
-          errorMessage = 'Invalid email or password'
+          errorMessage = data.message || 'Invalid email or password'
         } else if (response.status === 404) {
-          errorMessage = 'Account not found. Please check your email or sign up.'
+          errorMessage = data.message || 'Account not found. Please check your email or sign up.'
         } else if (response.status === 423) {
-          errorMessage = 'Account is locked. Please try again later.'
-        } else if (data.error) {
-          errorMessage = data.error
+          errorMessage = data.message || 'Account is locked. Please try again later.'
         }
         
         throw new Error(errorMessage)
@@ -163,7 +161,7 @@ export default function AuthForm({ defaultTab = 'signin', onSuccess }: AuthFormP
     setIsLoading(true)
 
     try {
-      const response = await fetch('/api/auth/signup', {
+      const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -177,22 +175,21 @@ export default function AuthForm({ defaultTab = 'signin', onSuccess }: AuthFormP
 
       const data = await response.json()
 
-      if (!response.ok) {
+      if (!data.success) {
         // Show specific error messages for signup
-        let errorMessage = 'An error occurred during signup'
+        let errorMessage = data.message || 'An error occurred during signup'
         
         if (response.status === 409) {
-          errorMessage = 'An account with this email already exists. Please sign in instead.'
+          errorMessage = data.message || 'An account with this email already exists. Please sign in instead.'
         } else if (response.status === 400) {
-          errorMessage = data.error || 'Invalid input. Please check your information.'
+          errorMessage = data.message || 'Invalid input. Please check your information.'
         } else if (response.status === 422) {
-          errorMessage = 'Password does not meet requirements. Please use a stronger password.'
-        } else if (data.error) {
-          errorMessage = data.error
+          errorMessage = data.message || 'Password does not meet requirements. Please use a stronger password.'
         }
         
         throw new Error(errorMessage)
       }
+
 
       toast.success('Account Created!', {
         description: 'We sent you a verification code. Please check your email.'
