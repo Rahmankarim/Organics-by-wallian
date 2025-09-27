@@ -19,34 +19,40 @@ export async function POST(request: NextRequest) {
 
     await dbConnect()
 
-    // Find the pending user
-    const pendingUser = await PendingUser.findOne({ email: email.toLowerCase() })
+    const normalizedEmail = email.toLowerCase().trim()
+
+    // Find the pending user explicitly
+    const pendingUser = await PendingUser.findOne({ email: normalizedEmail })
     if (!pendingUser) {
-      return NextResponse.json({ success: false, message: 'Invalid or expired verification code.' }, { status: 400 })
+      console.warn('Pending user not found during verification:', normalizedEmail)
+      return NextResponse.json({ success: false, message: 'Pending user not found' }, { status: 404 })
     }
 
     // Check if code has expired
-    if (pendingUser.verificationCodeExpires < new Date()) {
-      await PendingUser.deleteOne({ email: email.toLowerCase() })
-      return NextResponse.json({ success: false, message: 'Invalid or expired verification code.' }, { status: 400 })
+    const now = new Date()
+    if (pendingUser.verificationCodeExpires < now) {
+      console.info('Verification code expired for:', normalizedEmail)
+      await PendingUser.deleteOne({ email: normalizedEmail })
+      return NextResponse.json({ success: false, message: 'Verification code expired. Please sign up again.' }, { status: 410 })
     }
 
     // Verify the code
     const isValidCode = await bcrypt.compare(code, pendingUser.verificationCode)
     if (!isValidCode) {
-      return NextResponse.json({ success: false, message: 'Invalid or expired verification code.' }, { status: 400 })
+      console.warn('Invalid code attempt for:', normalizedEmail)
+      return NextResponse.json({ success: false, message: 'Invalid verification code' }, { status: 400 })
     }
 
     // Check if user already exists (safety check)
-    const existingUser = await User.findOne({ email: email.toLowerCase() })
+    const existingUser = await User.findOne({ email: normalizedEmail })
     if (existingUser) {
-      await PendingUser.deleteOne({ email: email.toLowerCase() })
+      await PendingUser.deleteOne({ email: normalizedEmail })
       return NextResponse.json({ success: false, message: 'User already exists' }, { status: 409 })
     }
 
     // Create the permanent user
     const newUser = new User({
-      email: pendingUser.email,
+      email: normalizedEmail,
       firstName: pendingUser.firstName,
       lastName: pendingUser.lastName,
       phone: pendingUser.phone,
@@ -67,7 +73,9 @@ export async function POST(request: NextRequest) {
     await newUser.save()
     
     // Delete the pending user
-    await PendingUser.deleteOne({ email: email.toLowerCase() })
+  await PendingUser.deleteOne({ email: normalizedEmail })
+
+  console.log('User verified & created:', { email: normalizedEmail, id: newUser._id.toString() })
     
     return NextResponse.json({ 
       success: true,

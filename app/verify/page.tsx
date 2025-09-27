@@ -66,9 +66,24 @@ function VerifyContent() {
           router.push('/signin?message=Account created successfully! Please sign in.')
         }, 1500)
       } else {
-        toast.error('Verification Failed', {
-          description: data.message || 'Invalid verification code. Please try again.'
-        })
+        let title = 'Verification Failed'
+        let description = data.message || 'Invalid verification code. Please try again.'
+
+        if (data.message === 'Pending user not found') {
+          title = 'No Pending Signup'
+          description = 'We could not find a pending signup for this email. Please sign up again.'
+          // Redirect user back after short delay
+          setTimeout(() => router.push('/signin'), 2000)
+        } else if (data.message === 'Verification code expired. Please sign up again.') {
+          title = 'Code Expired'
+          description = 'Your verification code has expired. Please register again.'
+          setTimeout(() => router.push('/signin'), 2000)
+        } else if (data.message === 'Invalid verification code') {
+          title = 'Invalid Code'
+          description = 'The code you entered is incorrect. Please try again.'
+        }
+
+        toast.error(title, { description })
         setVerificationCode('')
       }
     } catch (error) {

@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
     const hashedCode = await bcrypt.hash(code, 10)
 
     // Store user data and hashed code in PendingUser collection
-    const pendingUser = new PendingUser({
+    const pendingUser = await PendingUser.create({
       email: sanitizedEmail,
       firstName: sanitizedFirstName,
       lastName: sanitizedLastName,
@@ -84,8 +84,21 @@ export async function POST(request: NextRequest) {
       verificationCode: hashedCode,
       verificationCodeExpires: codeExpires
     })
-    
-    await pendingUser.save()
+
+    // Extra safeguard: verify it was persisted (should always have _id if successful)
+    if (!pendingUser?._id) {
+      console.error('PendingUser save failed (no _id) for email:', sanitizedEmail)
+      return NextResponse.json(
+        { success: false, message: 'Failed to initialize verification. Please try again.' },
+        { status: 500 }
+      )
+    }
+
+    console.log('PendingUser created:', {
+      email: sanitizedEmail,
+      id: pendingUser._id.toString(),
+      expires: codeExpires.toISOString()
+    })
 
     // Send verification code email
     const { sendVerificationCodeEmail } = await import('@/lib/email')
