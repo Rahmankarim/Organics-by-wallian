@@ -102,6 +102,8 @@ export async function POST(request: NextRequest) {
       verificationCode: hashedCode,
       verificationCodeExpires: codeExpires
     })
+    // Unconditional logging for debugging on Vercel
+    console.log("Pending user saved:", pendingUser)
 
     // Extra safeguard: verify it was persisted (should always have _id if successful)
     if (!pendingUser?._id) {

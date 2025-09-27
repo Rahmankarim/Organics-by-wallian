@@ -13,6 +13,8 @@ export async function POST(request: NextRequest) {
 
   try {
     const { email, code } = await request.json()
+    // Unconditional logging for debugging on Vercel
+    console.log('[VERIFY] Incoming payload:', { email, code })
     if (process.env.AUTH_DEBUG) {
       console.log('[AUTH_DEBUG][verify] Payload received', { email, codeLength: code?.length })
     }
@@ -32,6 +34,8 @@ export async function POST(request: NextRequest) {
 
     // Find the pending user explicitly
     const pendingUser = await PendingUser.findOne({ email: normalizedEmail })
+    // Unconditional logging for pending user search result
+    console.log('[VERIFY] PendingUser found:', !!pendingUser, 'for email:', normalizedEmail)
     if (!pendingUser) {
       console.warn('Pending user not found during verification:', normalizedEmail)
       if (process.env.AUTH_DEBUG) {
