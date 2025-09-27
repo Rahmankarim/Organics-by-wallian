@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     // Validate required fields
     if (!email || !password || !firstName || !lastName) {
       return NextResponse.json(
-        { error: 'All required fields must be provided' },
+        { success: false, message: 'All required fields must be provided' },
         { status: 400 }
       )
     }
@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
     // Validate email format
     if (!validateEmail(sanitizedEmail)) {
       return NextResponse.json(
-        { error: 'Invalid email format' },
+        { success: false, message: 'Invalid email format' },
         { status: 400 }
       )
     }
@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
     const isPasswordValid = validatePassword(password)
     if (!isPasswordValid) {
       return NextResponse.json(
-        { error: 'Password must be at least 8 characters and include uppercase, lowercase, number, and special character.' },
+        { success: false, message: 'Password must be at least 8 characters and include uppercase, lowercase, number, and special character.' },
         { status: 400 }
       )
     }
@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
     const existingUser = await User.findOne({ email: sanitizedEmail })
     if (existingUser) {
       return NextResponse.json(
-        { error: 'User with this email already exists' },
+        { success: false, message: 'User with this email already exists' },
         { status: 409 }
       )
     }
@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
       // Delete the pending user if email fails
       await PendingUser.deleteOne({ email: sanitizedEmail })
       return NextResponse.json(
-        { error: 'Failed to send verification email. Please try again.' },
+        { success: false, message: 'Failed to send verification email. Please try again.' },
         { status: 500 }
       )
     }
@@ -103,7 +103,8 @@ export async function POST(request: NextRequest) {
     // Return response
     return NextResponse.json(
       {
-        message: 'Verification code sent. Please check your email to verify your account.'
+        success: true, 
+        message: 'Verification code sent to your email.'
       },
       { status: 200 }
     )
@@ -111,7 +112,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Registration error:', error)
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { success: false, message: 'Internal server error' },
       { status: 500 }
     )
   }
