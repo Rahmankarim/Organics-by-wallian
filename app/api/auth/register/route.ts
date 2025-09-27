@@ -89,7 +89,16 @@ export async function POST(request: NextRequest) {
 
     // Send verification code email
     const { sendVerificationCodeEmail } = await import('@/lib/email')
-    await sendVerificationCodeEmail(sanitizedEmail, code)
+    const emailSent = await sendVerificationCodeEmail(sanitizedEmail, code)
+
+    if (!emailSent) {
+      // Delete the pending user if email fails
+      await PendingUser.deleteOne({ email: sanitizedEmail })
+      return NextResponse.json(
+        { error: 'Failed to send verification email. Please try again.' },
+        { status: 500 }
+      )
+    }
 
     // Return response
     return NextResponse.json(
