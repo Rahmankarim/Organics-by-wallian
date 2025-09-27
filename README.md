@@ -1,4 +1,4 @@
-# 🥜 Luxury Dry Fruits E-commerce Platform
+# 🥜 Organics By Wallian
 
 A comprehensive, production-ready e-commerce platform built with Next.js 14+, TypeScript, MongoDB, and modern web technologies for selling premium dry fruits and nuts.
 
