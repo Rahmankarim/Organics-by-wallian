@@ -75,6 +75,19 @@ export interface IUser {
   updatedAt: Date
 }
 
+// Pending User Interface for temporary signups before verification
+export interface IPendingUser {
+  _id?: string
+  email: string
+  firstName: string
+  lastName: string
+  phone?: string
+  password: string
+  verificationCode: string
+  verificationCodeExpires: Date
+  createdAt: Date
+}
+
 export interface UserPreferences {
   newsletter: boolean
   smsNotifications: boolean

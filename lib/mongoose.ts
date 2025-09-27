@@ -2,6 +2,7 @@ import mongoose from 'mongoose'
 import {
   IProduct,
   IUser,
+  IPendingUser,
   ICartItem,
   IOrder,
   ICoupon,
@@ -195,6 +196,18 @@ const UserSchema = new mongoose.Schema<IUser>({
 
 // UserSchema.index({ email: 1 }) // Removed - email already has unique: true
 
+const PendingUserSchema = new mongoose.Schema<IPendingUser>({
+  email: { type: String, required: true, unique: true, lowercase: true },
+  firstName: { type: String, required: true },
+  lastName: { type: String, required: true },
+  phone: { type: String },
+  password: { type: String, required: true }, // This will be hashed
+  verificationCode: { type: String, required: true }, // This will be hashed
+  verificationCodeExpires: { type: Date, required: true, expires: 0 } // Auto-delete when expired
+}, {
+  timestamps: true
+})
+
 const CartItemSchema = new mongoose.Schema<ICartItem>({
   userId: { type: String, required: true },
   productId: { type: Number, required: true },
@@ -350,7 +363,7 @@ const CategorySchema = new mongoose.Schema<ICategory>({
 })
 
 // Models - only create if not in build environment
-let Product: any, User: any, CartItem: any, Order: any, Coupon: any, Review: any, 
+let Product: any, User: any, PendingUser: any, CartItem: any, Order: any, Coupon: any, Review: any, 
     Wishlist: any, BlogPost: any, Analytics: any, Newsletter: any, Category: any
 
 // Function to initialize models safely
@@ -358,6 +371,7 @@ function initModels() {
   if (!Product) {
     Product = mongoose.models.Product || mongoose.model<IProduct>('Product', ProductSchema)
     User = mongoose.models.User || mongoose.model<IUser>('User', UserSchema)
+    PendingUser = mongoose.models.PendingUser || mongoose.model<IPendingUser>('PendingUser', PendingUserSchema)
     CartItem = mongoose.models.CartItem || mongoose.model<ICartItem>('CartItem', CartItemSchema)
     Order = mongoose.models.Order || mongoose.model<IOrder>('Order', OrderSchema)
     Coupon = mongoose.models.Coupon || mongoose.model<ICoupon>('Coupon', CouponSchema)
@@ -375,6 +389,6 @@ if (process.env.NODE_ENV !== 'production' || process.env.MONGODB_URI) {
   initModels()
 }
 
-export { Product, User, CartItem, Order, Coupon, Review, Wishlist, BlogPost, Analytics, Newsletter, Category }
+export { Product, User, PendingUser, CartItem, Order, Coupon, Review, Wishlist, BlogPost, Analytics, Newsletter, Category }
 
 export default dbConnect

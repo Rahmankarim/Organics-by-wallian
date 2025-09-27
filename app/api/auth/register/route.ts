@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { User } from '@/lib/mongoose'
-import { hashPassword, validateEmail, validatePassword, generateSecureToken, sanitizeInput } from '@/lib/auth'
+import { User, PendingUser } from '@/lib/mongoose'
+import { hashPassword, validateEmail, validatePassword, sanitizeInput } from '@/lib/auth'
 import dbConnect from '@/lib/mongoose'
 import { rateLimit } from '@/lib/auth'
-import { verificationCodes } from '@/lib/verification-store'
+import bcrypt from 'bcryptjs'
 
 // Rate limiting: 5 registration attempts per 15 minutes
 const registerRateLimit = rateLimit(5, 15 * 60 * 1000)
@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
 
     await dbConnect()
 
-    // Check if user already exists
+    // Check if user already exists in permanent User collection
     const existingUser = await User.findOne({ email: sanitizedEmail })
     if (existingUser) {
       return NextResponse.json(
@@ -59,22 +59,33 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Check if there's already a pending signup for this email
+    const existingPending = await PendingUser.findOne({ email: sanitizedEmail })
+    if (existingPending) {
+      // Delete the old pending user to create a new one
+      await PendingUser.deleteOne({ email: sanitizedEmail })
+    }
+
     // Generate 6-digit code and expiry
     const code = Math.floor(100000 + Math.random() * 900000).toString()
-    const expires = Date.now() + 10 * 60 * 1000 // 10 minutes from now
+    const codeExpires = new Date(Date.now() + 10 * 60 * 1000) // 10 minutes from now
 
-    // Store user data and code in memory (don't create user yet)
-    verificationCodes[sanitizedEmail] = {
-      code,
-      expires,
-      userData: {
-        firstName: sanitizedFirstName,
-        lastName: sanitizedLastName,
-        email: sanitizedEmail,
-        password,
-        phone: sanitizedPhone
-      }
-    }
+    // Hash both password and verification code for security
+    const hashedPassword = await hashPassword(password)
+    const hashedCode = await bcrypt.hash(code, 10)
+
+    // Store user data and hashed code in PendingUser collection
+    const pendingUser = new PendingUser({
+      email: sanitizedEmail,
+      firstName: sanitizedFirstName,
+      lastName: sanitizedLastName,
+      phone: sanitizedPhone,
+      password: hashedPassword,
+      verificationCode: hashedCode,
+      verificationCodeExpires: codeExpires
+    })
+    
+    await pendingUser.save()
 
     // Send verification code email
     const { sendVerificationCodeEmail } = await import('@/lib/email')

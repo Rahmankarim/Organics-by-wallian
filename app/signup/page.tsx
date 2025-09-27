@@ -55,8 +55,8 @@ export default function SignupPage() {
     const data = await res.json()
     setLoading(false)
     if (res.ok) {
-      setMessage('Account verified! Redirecting to login...')
-      setTimeout(() => router.push('/login'), 1500)
+      setMessage('Your account has been created successfully. You can now sign in!')
+      setTimeout(() => router.push('/signin'), 2000)
     } else {
       setError(data.error || 'Verification failed')
     }
