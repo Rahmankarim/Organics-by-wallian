@@ -51,9 +51,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check if email is verified (only in production)
-    if (!user.isEmailVerified && process.env.NODE_ENV === 'production') {
-      return NextResponse.json(
+    // Check if email is verified
+    if (!user.isEmailVerified) {
+     return NextResponse.json(
         { error: 'Please verify your email before logging in' },
         { status: 403 }
       )
