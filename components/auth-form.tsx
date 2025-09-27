@@ -195,24 +195,12 @@ export default function AuthForm({ defaultTab = 'signin', onSuccess }: AuthFormP
       }
 
       toast.success('Account Created!', {
-        description: 'Your account has been created successfully. You can now sign in!'
+        description: 'We sent you a verification code. Please check your email.'
       })
 
-      // Reset form and switch to signin
-      setSignupForm({
-        firstName: '',
-        lastName: '',
-        email: '',
-        phone: '',
-        password: '',
-        confirmPassword: ''
-      })
-
-      // Auto switch to signin tab
-      const signinTab = document.querySelector('[value="signin"]') as HTMLElement
-      if (signinTab) {
-        signinTab.click()
-      }
+      // Redirect to verify-email page
+      router.push(`/verify-email?email=${encodeURIComponent(signupForm.email)}`)
+      
 
     } catch (error) {
       toast.error('Signup Failed', {
