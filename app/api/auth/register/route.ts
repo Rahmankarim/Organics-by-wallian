@@ -82,6 +82,16 @@ export async function POST(request: NextRequest) {
     const hashedPassword = await hashPassword(password)
     const hashedCode = await bcrypt.hash(code, 10)
 
+    if (process.env.AUTH_DEBUG) {
+      console.log('[AUTH_DEBUG][register] Incoming payload', {
+        email,
+        hasPassword: !!password,
+        firstName: !!firstName,
+        lastName: !!lastName,
+        phoneProvided: !!phone
+      })
+    }
+
     // Store user data and hashed code in PendingUser collection
     const pendingUser = await PendingUser.create({
       email: sanitizedEmail,
@@ -102,15 +112,21 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    console.log('PendingUser created:', {
-      email: sanitizedEmail,
-      id: pendingUser._id.toString(),
-      expires: codeExpires.toISOString()
-    })
+    if (process.env.AUTH_DEBUG) {
+      console.log('[AUTH_DEBUG][register] PendingUser created', {
+        email: sanitizedEmail,
+        id: pendingUser._id.toString(),
+        expires: codeExpires.toISOString(),
+        codePreview: code.slice(0,2) + '****' // never log full code
+      })
+    }
 
     // Send verification code email
     const { sendVerificationCodeEmail } = await import('@/lib/email')
     const emailSent = await sendVerificationCodeEmail(sanitizedEmail, code)
+    if (process.env.AUTH_DEBUG) {
+      console.log('[AUTH_DEBUG][register] Email send result', { email: sanitizedEmail, emailSent })
+    }
 
     if (!emailSent) {
       // Delete the pending user if email fails
@@ -132,6 +148,9 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Registration error:', error)
+    if (process.env.AUTH_DEBUG) {
+      console.log('[AUTH_DEBUG][register] Error stack:', (error as any)?.stack)
+    }
     return NextResponse.json(
       { success: false, message: 'Internal server error' },
       { status: 500 }

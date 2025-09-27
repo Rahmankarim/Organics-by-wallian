@@ -13,6 +13,9 @@ export async function POST(request: NextRequest) {
 
   try {
     const { email, code } = await request.json()
+    if (process.env.AUTH_DEBUG) {
+      console.log('[AUTH_DEBUG][verify] Payload received', { email, codeLength: code?.length })
+    }
     if (!email || !code) {
       return NextResponse.json({ success: false, message: 'Email and code are required' }, { status: 400 })
     }
@@ -31,6 +34,10 @@ export async function POST(request: NextRequest) {
     const pendingUser = await PendingUser.findOne({ email: normalizedEmail })
     if (!pendingUser) {
       console.warn('Pending user not found during verification:', normalizedEmail)
+      if (process.env.AUTH_DEBUG) {
+        const count = await PendingUser.countDocuments({})
+        console.log('[AUTH_DEBUG][verify] Pending user not found. Collection size:', count)
+      }
       return NextResponse.json({ success: false, message: 'Pending user not found' }, { status: 404 })
     }
 
@@ -77,11 +84,16 @@ export async function POST(request: NextRequest) {
     })
     
     await newUser.save()
+    if (process.env.AUTH_DEBUG) {
+      console.log('[AUTH_DEBUG][verify] User created', { email: normalizedEmail, userId: newUser._id.toString() })
+    }
     
     // Delete the pending user
   await PendingUser.deleteOne({ email: normalizedEmail })
 
-  console.log('User verified & created:', { email: normalizedEmail, id: newUser._id.toString() })
+    if (process.env.AUTH_DEBUG) {
+      console.log('[AUTH_DEBUG][verify] Cleanup complete for pending user', { email: normalizedEmail })
+    }
     
     return NextResponse.json({ 
       success: true,
