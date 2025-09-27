@@ -18,6 +18,12 @@ export async function POST(request: NextRequest) {
     }
 
     await dbConnect()
+    if (process.env.AUTH_DEBUG) {
+      console.log('[AUTH_DEBUG][verify] Start verification for', email, 'ENV:', {
+        hasMongo: !!process.env.MONGODB_URI,
+        nodeEnv: process.env.NODE_ENV
+      })
+    }
 
     const normalizedEmail = email.toLowerCase().trim()
 

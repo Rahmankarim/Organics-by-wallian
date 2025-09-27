@@ -49,6 +49,14 @@ export async function POST(request: NextRequest) {
     }
 
     await dbConnect()
+    if (process.env.AUTH_DEBUG) {
+      console.log('[AUTH_DEBUG][register] Connected. ENV check:', {
+        hasMongo: !!process.env.MONGODB_URI,
+        nodeEnv: process.env.NODE_ENV,
+        emailHost: process.env.EMAIL_HOST,
+        appUrl: process.env.NEXT_PUBLIC_APP_URL
+      })
+    }
 
     // Check if user already exists in permanent User collection
     const existingUser = await User.findOne({ email: sanitizedEmail })
