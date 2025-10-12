@@ -1,5 +1,6 @@
 "use client"
 import { motion, useScroll, useTransform } from "framer-motion"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -8,54 +9,23 @@ import Image from "next/image"
 import Link from "next/link"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
+import WishlistButton from "@/components/wishlist-button"
 
-const featuredProducts = [
-  {
-    id: 1,
-    name: "Premium Kashmiri Almonds",
-    price: 899,
-    originalPrice: 1199,
-    image: "/Features/almond.jpg?height=300&width=300",
-    rating: 4.8,
-    reviews: 124,
-    badge: "Bestseller",
-    nutrition: "Rich in Vitamin E & Protein",
-  },
-  {
-    id: 2,
-    name: "Royal Pistachios",
-    price: 1299,
-    originalPrice: 1599,
-    image: "/Features/Pistachios.jpg?height=300&width=300",
-    rating: 4.9,
-    reviews: 89,
-    badge: "Premium",
-    nutrition: "High in Antioxidants",
-  },
-  {
-    id: 3,
-    name: "Organic Dates Medley",
-    price: 649,
-    originalPrice: 799,
-    image: "/Features/dates.jpg?height=300&width=300",
-    rating: 4.7,
-    reviews: 156,
-    badge: "Organic",
-    nutrition: "Natural Energy Booster",
-  },
-  {
-    id: 4,
-    name: "Himalayan Walnuts",
-    price: 1099,
-    originalPrice: 1399,
-    image: "/Features/walnut.jpg?height=300&width=300",
-    rating: 4.8,
-    reviews: 92,
-    badge: "Limited Edition",
-    nutrition: "Omega-3 Rich",
-  },
-]
+interface Product {
+  _id: string
+  id: number
+  name: string
+  price: number
+  originalPrice: number
+  images: string[]
+  rating: number
+  reviewCount: number
+  badge?: string
+  shortDescription: string
+  inStock: boolean
+}
 
+// Keep dummy testimonials
 const testimonials = [
   {
     name: "Rahman Karim",
@@ -85,6 +55,29 @@ export default function HomePage() {
   const y1 = useTransform(scrollY, [0, 300], [0, -50])
   const y2 = useTransform(scrollY, [0, 300], [0, -100])
   const opacity = useTransform(scrollY, [0, 300], [1, 0.8])
+
+  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchFeaturedProducts = async () => {
+      try {
+        const response = await fetch('/api/products?limit=4&featured=true')
+        if (response.ok) {
+          const data = await response.json()
+          setFeaturedProducts(data.products || [])
+        } else {
+          console.error('Failed to fetch featured products')
+        }
+      } catch (error) {
+        console.error('Error fetching featured products:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchFeaturedProducts()
+  }, [])
 
   return (
     <div className="min-h-screen bg-[#F4EBD0]">
@@ -244,69 +237,93 @@ export default function HomePage() {
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {featuredProducts.map((product, index) => (
-              <motion.div
-                key={product.id}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                whileHover={{ y: -5 }}
-                className="group"
-              >
-                <Card className="overflow-hidden border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-white">
-                  <div className="relative">
-                    <Image
-                      src={product.image || "/placeholder.svg"}
-                      alt={product.name}
-                      width={300}
-                      height={300}
-                      className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                    <Badge className="absolute top-3 left-3 bg-[#D4AF37] text-[#355E3B]">{product.badge}</Badge>
-                    {/* The commented Section is the Start over the items */}
-                    {/* <Button
-                      size="icon"
-                      variant="ghost"
-                      className="absolute top-3 right-3 bg-white/80 hover:bg-white text-[#355E3B]"
-                    >
-                      <Heart className="w-4 h-4" />
-                    </Button> */}
-                  </div>
-
-                  <CardContent className="p-6">
-                    <div className="flex items-center gap-1 mb-2">
-                      {[...Array(5)].map((_, i) => (
-                        <Star
-                          key={i}
-                          className={`w-4 h-4 ${
-                            i < Math.floor(product.rating) ? "fill-[#D4AF37] text-[#D4AF37]" : "text-gray-300"
-                          }`}
+            {isLoading ? (
+              // Loading skeletons
+              [...Array(4)].map((_, index) => (
+                <div key={index} className="animate-pulse">
+                  <Card className="overflow-hidden border-0 shadow-lg bg-white">
+                    <div className="h-64 bg-gray-200"></div>
+                    <CardContent className="p-6">
+                      <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                      <div className="h-6 bg-gray-200 rounded mb-2"></div>
+                      <div className="h-4 bg-gray-200 rounded mb-3"></div>
+                      <div className="h-8 bg-gray-200 rounded"></div>
+                    </CardContent>
+                  </Card>
+                </div>
+              ))
+            ) : featuredProducts.length > 0 ? (
+              featuredProducts.map((product, index) => (
+                <motion.div
+                  key={product._id}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: index * 0.1 }}
+                  whileHover={{ y: -5 }}
+                  className="group"
+                >
+                  <Card className="overflow-hidden border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-white">
+                    <div className="relative">
+                      <Image
+                        src={product.images?.[0] || "/placeholder.svg"}
+                        alt={product.name}
+                        width={300}
+                        height={300}
+                        className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                      {product.badge && (
+                        <Badge className="absolute top-3 left-3 bg-[#D4AF37] text-[#355E3B]">{product.badge}</Badge>
+                      )}
+                      <div className="absolute top-3 right-3">
+                        <WishlistButton 
+                          productId={product._id} 
+                          className="bg-white/80 hover:bg-white"
+                          size="sm"
                         />
-                      ))}
-                      <span className="text-sm text-[#6F4E37] ml-1">({product.reviews})</span>
-                    </div>
-
-                    <h3 className="text-lg font-semibold text-[#355E3B] mb-2">{product.name}</h3>
-
-                    <p className="text-sm text-[#6F4E37] mb-3">{product.nutrition}</p>
-
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xl font-bold text-[#355E3B]">₹{product.price}</span>
-                        <span className="text-sm text-gray-500 line-through">₹{product.originalPrice}</span>
                       </div>
                     </div>
 
-                    <Button className="w-full bg-[#355E3B] hover:bg-[#2A4A2F] text-white" asChild>
-                      <Link href={`/products/${product.id}`}>
-                        <ShoppingCart className="w-4 h-4 mr-2" />
-                        Add to Cart
-                      </Link>
-                    </Button>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
+                    <CardContent className="p-6">
+                      <div className="flex items-center gap-1 mb-2">
+                        {[...Array(5)].map((_, i) => (
+                          <Star
+                            key={i}
+                            className={`w-4 h-4 ${
+                              i < Math.floor(product.rating) ? "fill-[#D4AF37] text-[#D4AF37]" : "text-gray-300"
+                            }`}
+                          />
+                        ))}
+                        <span className="text-sm text-[#6F4E37] ml-1">({product.reviewCount})</span>
+                      </div>
+
+                      <h3 className="text-lg font-semibold text-[#355E3B] mb-2">{product.name}</h3>
+
+                      <p className="text-sm text-[#6F4E37] mb-3">{product.shortDescription}</p>
+
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xl font-bold text-[#355E3B]">Rs. {product.price.toLocaleString()}</span>
+                          {product.originalPrice > product.price && (
+                            <span className="text-sm text-gray-500 line-through">Rs. {product.originalPrice.toLocaleString()}</span>
+                          )}
+                        </div>
+                      </div>
+
+                      <Button className="w-full bg-[#355E3B] hover:bg-[#2A4A2F] text-white" asChild>
+                        <Link href={`/products/${product.id}`}>
+                          View
+                        </Link>
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ))
+            ) : (
+              // No products found
+              <div className="col-span-full text-center py-12">
+                <p className="text-[#6F4E37] text-lg">No featured products available at the moment.</p>
+              </div>
+            )}
           </div>
 
           <motion.div

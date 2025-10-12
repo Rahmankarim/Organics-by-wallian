@@ -1,7 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server'
+import mongoose from 'mongoose'
 import dbConnect from '@/lib/mongoose'
 import { CartItem, Product, Analytics } from '@/lib/mongoose'
 import { getUserFromRequest } from '@/lib/auth'
+
+// Validate if a string is a valid MongoDB ObjectId
+function isValidObjectId(id: string): boolean {
+  return mongoose.isValidObjectId(id)
+}
+
+// Resolve product by either ObjectId (_id) or legacy numeric `id` field.
+async function resolveProduct(productRef: any) {
+  if (!productRef && productRef !== 0) return null
+  // If it's an ObjectId-like string, query by _id
+  if (typeof productRef === 'string' && isValidObjectId(productRef)) {
+    return await Product.findById(productRef).lean()
+  }
+
+  // If numeric (string of digits or number) query by legacy numeric id
+  if (typeof productRef === 'number' || (typeof productRef === 'string' && /^\d+$/.test(productRef))) {
+    const numericId = typeof productRef === 'string' ? parseInt(productRef, 10) : productRef
+    return await Product.findOne({ id: numericId }).lean()
+  }
+
+  // Unknown format - avoid querying by `id` with a string which will cause cast errors
+  return null
+}
 
 // GET - Fetch user's cart
 export async function GET(request: NextRequest) {
@@ -22,7 +46,7 @@ export async function GET(request: NextRequest) {
     // Get product details for each cart item
     const cartWithProducts = await Promise.all(
       cartItems.map(async (item: any) => {
-        const product = await Product.findOne({ id: item.productId }).lean() as any
+        const product = await resolveProduct(item.productId) as any
         if (!product) return null
         
         // Find variant if specified
@@ -39,7 +63,7 @@ export async function GET(request: NextRequest) {
           price: variant ? variant.price : product.price,
           addedAt: item.addedAt,
           product: {
-            id: product.id,
+            id: product._id.toString(),
             name: product.name,
             slug: product.slug,
             images: product.images,
@@ -64,7 +88,7 @@ export async function GET(request: NextRequest) {
     }, 0)
 
     const tax = subtotal * 0.18 // 18% GST
-    const shipping = subtotal >= 999 ? 0 : 99 // Free shipping above ₹999
+    const shipping = subtotal >= 999 ? 0 : 99 // Free shipping above Rs. 999
     const total = subtotal + tax + shipping
 
     return NextResponse.json({
@@ -91,19 +115,26 @@ export async function GET(request: NextRequest) {
 // POST - Add item to cart
 export async function POST(request: NextRequest) {
   try {
-    const user = await getUserFromRequest(request)
-    if (!user) {
+    console.log('Cart POST endpoint called')
+    
+    // First validate request body
+    let body
+    try {
+      body = await request.json()
+      console.log('Request body:', body)
+    } catch (parseError) {
+      console.error('Failed to parse request body:', parseError)
       return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
+        { error: 'Invalid request body' },
+        { status: 400 }
       )
     }
 
-    const body = await request.json()
     const { productId, quantity, variantId, price } = body
 
     // Validation
     if (!productId || !quantity || quantity <= 0) {
+      console.log('Validation failed:', { productId, quantity })
       return NextResponse.json(
         { error: 'Invalid product ID or quantity' },
         { status: 400 }
@@ -111,15 +142,55 @@ export async function POST(request: NextRequest) {
     }
 
     await dbConnect()
+    console.log('Database connected')
 
-    // Verify product exists and is in stock
-    const product = await Product.findOne({ id: productId }) as any
-    if (!product) {
+    // Validate productId is a valid MongoDB ObjectId or legacy numeric ID
+    console.log('Looking for product with ID:', productId, 'Type:', typeof productId)
+    
+    let product: any = null
+    
+    // First try as ObjectId (preferred method)
+    if (typeof productId === 'string' && isValidObjectId(productId)) {
+      console.log('Trying ObjectId lookup:', productId)
+      product = await Product.findById(productId).lean()
+      console.log('ObjectId query result:', product ? 'Product found' : 'Product not found')
+    }
+    
+    // If not found and it's a numeric ID, try legacy lookup
+    if (!product && (typeof productId === 'number' || (typeof productId === 'string' && /^\d+$/.test(productId)))) {
+      const numericId = typeof productId === 'string' ? parseInt(productId) : productId
+      console.log('Trying legacy numeric ID lookup:', numericId)
+      product = await Product.findOne({ id: numericId }).lean()
+      console.log('Numeric ID query result:', product ? 'Product found' : 'Product not found')
+    }
+    
+  if (!product) {
+      // Debug: List all available products with their _id and id values
+      const allProducts = await Product.find({}, '_id id name').limit(10).lean()
+      console.log('Available products:', allProducts.map((p: any) => ({ 
+        _id: p._id.toString(), 
+        id: p.id, 
+        name: p.name 
+      })))
+      
+      console.log('Product not found for ID:', productId)
       return NextResponse.json(
-        { error: 'Product not found' },
+        { 
+          error: 'Product not found',
+          requestedId: productId,
+          availableIds: allProducts.map((p: any) => p._id.toString()),
+          hint: 'Make sure to use valid MongoDB ObjectId strings'
+        },
         { status: 404 }
       )
     }
+    
+    console.log('Product found:', { 
+      _id: product._id.toString(), 
+      name: product.name, 
+      price: product.price,
+      inStock: product.inStock 
+    })
 
     if (!product.inStock) {
       return NextResponse.json(
@@ -128,61 +199,76 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check variant if specified
-    let variant = null
-    if (variantId && product.variants) {
-      variant = product.variants.find((v: any) => v.id === variantId)
-      if (!variant) {
-        return NextResponse.json(
-          { error: 'Product variant not found' },
-          { status: 404 }
-        )
-      }
-      if (variant.stockCount < quantity) {
-        return NextResponse.json(
-          { error: 'Insufficient stock for selected variant' },
-          { status: 400 }
-        )
-      }
-    } else if (product.stockCount < quantity) {
-      return NextResponse.json(
-        { error: 'Insufficient stock' },
-        { status: 400 }
-      )
+    // Require authentication for adding to server-side cart
+    const user = await getUserFromRequest(request)
+    console.log('User found:', !!user)
+
+    if (!user) {
+      return NextResponse.json({ message: 'Please login to add items to cart' }, { status: 401 })
     }
 
-    // Check if item already exists in cart
-    const existingCartItem = await CartItem.findOne({
-      userId: user._id,
-      productId,
-      variantId: variantId || null
-    })
-
-    if (existingCartItem) {
-      // Update quantity
-      const newQuantity = existingCartItem.quantity + quantity
-      const maxStock = variant ? variant.stockCount : product.stockCount
+    if (user) {
+      // Authenticated user - save to database
+      console.log('Processing authenticated user cart')
       
-      if (newQuantity > maxStock) {
+      // Check variant if specified
+      let variant = null
+      if (variantId && product.variants) {
+        variant = product.variants.find((v: any) => v.id === variantId)
+        if (!variant) {
+          return NextResponse.json(
+            { error: 'Product variant not found' },
+            { status: 404 }
+          )
+        }
+        if (variant.stockCount < quantity) {
+          return NextResponse.json(
+            { error: 'Insufficient stock for selected variant' },
+            { status: 400 }
+          )
+        }
+      } else if (product.stockCount < quantity) {
         return NextResponse.json(
-          { error: `Cannot add more items. Maximum available: ${maxStock}` },
+          { error: 'Insufficient stock' },
           { status: 400 }
         )
       }
 
-      existingCartItem.quantity = newQuantity
-      existingCartItem.price = variant ? variant.price : product.price
-      await existingCartItem.save()
-    } else {
-      // Create new cart item
-      await CartItem.create({
+      // Check if item already exists in cart
+      const existingCartItem = await CartItem.findOne({
         userId: user._id,
         productId,
-        variantId: variantId || null,
-        quantity,
-        price: variant ? variant.price : product.price,
-        addedAt: new Date()
+        variantId: variantId || null
       })
+
+      if (existingCartItem) {
+        // Update quantity
+        const newQuantity = existingCartItem.quantity + quantity
+        const maxStock = variant ? variant.stockCount : product.stockCount
+        
+        if (newQuantity > maxStock) {
+          return NextResponse.json(
+            { error: `Cannot add more items. Maximum available: ${maxStock}` },
+            { status: 400 }
+          )
+        }
+
+        existingCartItem.quantity = newQuantity
+        existingCartItem.price = variant ? variant.price : (price || product.price)
+        await existingCartItem.save()
+        console.log('Updated existing cart item')
+      } else {
+        // Create new cart item
+        const newCartItem = await CartItem.create({
+          userId: user._id,
+          productId,
+          variantId: variantId || null,
+          quantity,
+          price: variant ? variant.price : (price || product.price),
+          addedAt: new Date()
+        })
+        console.log('Created new cart item:', newCartItem._id)
+      }
     }
 
     // Track analytics
@@ -200,15 +286,22 @@ export async function POST(request: NextRequest) {
       console.error('Analytics error:', analyticsError)
     }
 
+    console.log('Cart POST successful')
     return NextResponse.json({
       success: true,
-      message: 'Item added to cart successfully'
+      message: 'Item added to cart successfully',
+      productId,
+      quantity,
+      authenticated: !!user
     })
 
   } catch (error) {
     console.error('Cart POST error:', error)
     return NextResponse.json(
-      { error: 'Failed to add item to cart' },
+      { 
+        error: 'Failed to add item to cart',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500 }
     )
   }

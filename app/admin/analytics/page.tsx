@@ -51,7 +51,7 @@ export default function AdminAnalyticsPage() {
   const stats = [
     {
       title: "Total Revenue",
-      value: "₹1,85,000",
+      value: "Rs. 1,85,000",
       change: "+12.5%",
       trend: "up",
       icon: DollarSign,
@@ -161,7 +161,7 @@ export default function AdminAnalyticsPage() {
                 <YAxis />
                 <Tooltip />
                 <Legend />
-                <Bar dataKey="sales" fill="#355E3B" name="Sales (₹)" />
+                <Bar dataKey="sales" fill="#355E3B" name="Sales (Rs.)" />
                 <Bar dataKey="orders" fill="#D4AF37" name="Orders" />
               </BarChart>
             </ResponsiveContainer>
@@ -221,7 +221,7 @@ export default function AdminAnalyticsPage() {
                 dataKey="revenue" 
                 stroke="#355E3B" 
                 strokeWidth={3}
-                name="Actual Revenue (₹)"
+                name="Actual Revenue (Rs.)"
               />
               <Line 
                 type="monotone" 
@@ -229,7 +229,7 @@ export default function AdminAnalyticsPage() {
                 stroke="#D4AF37" 
                 strokeWidth={2}
                 strokeDasharray="5 5"
-                name="Target Revenue (₹)"
+                name="Target Revenue (Rs.)"
               />
             </LineChart>
           </ResponsiveContainer>
@@ -245,7 +245,7 @@ export default function AdminAnalyticsPage() {
           <CardContent>
             <div className="space-y-2">
               <p className="font-medium">Premium Kashmir Almonds</p>
-              <p className="text-sm text-gray-600">₹45,000 in sales</p>
+              <p className="text-sm text-gray-600">Rs. 45,000 in sales</p>
               <p className="text-sm text-green-600">+22% from last period</p>
             </div>
           </CardContent>
@@ -258,7 +258,7 @@ export default function AdminAnalyticsPage() {
           <CardContent>
             <div className="space-y-2">
               <p className="font-medium">Rajesh Kumar</p>
-              <p className="text-sm text-gray-600">15 orders, ₹22,400 total</p>
+              <p className="text-sm text-gray-600">15 orders, Rs. 22,400 total</p>
               <p className="text-sm text-blue-600">VIP Customer</p>
             </div>
           </CardContent>

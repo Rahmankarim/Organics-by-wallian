@@ -162,7 +162,7 @@ export default function AdminOrdersPage() {
         },
         {
           title: "Total Revenue",
-          value: `₹${ordersData.stats.totalRevenue.toLocaleString()}`,
+          value: `Rs. ${ordersData.stats.totalRevenue.toLocaleString()}`,
           icon: DollarSign,
           color: "text-green-600",
         },
@@ -294,7 +294,7 @@ export default function AdminOrdersPage() {
                           <p className="text-sm">{order.items.length} items</p>
                         </TableCell>
                         <TableCell>
-                          <p className="font-semibold text-[#355E3B]">₹{order.total.toLocaleString()}</p>
+                          <p className="font-semibold text-[#355E3B]">Rs. {order.total.toLocaleString()}</p>
                         </TableCell>
                         <TableCell>
                           <Badge className={getStatusColor(order.status)}>{order.status}</Badge>
@@ -399,13 +399,13 @@ export default function AdminOrdersPage() {
                         <p className="font-medium">{item.name}</p>
                         <p className="text-sm text-[#6F4E37]">Qty: {item.quantity}</p>
                       </div>
-                      <p className="font-semibold">₹{(item.price * item.quantity).toLocaleString()}</p>
+                      <p className="font-semibold">Rs. {(item.price * item.quantity).toLocaleString()}</p>
                     </div>
                   ))}
                 </div>
                 <div className="flex justify-between items-center pt-3 border-t">
                   <span className="font-semibold">Total:</span>
-                  <span className="font-bold text-lg text-[#355E3B]">₹{selectedOrder.total.toLocaleString()}</span>
+                  <span className="font-bold text-lg text-[#355E3B]">Rs. {selectedOrder.total.toLocaleString()}</span>
                 </div>
               </div>
 

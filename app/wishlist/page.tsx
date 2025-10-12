@@ -10,7 +10,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
-import { useAuthStore } from "@/lib/store"
+import { useAuthStore, useWishlistStore, useCartStore } from "@/lib/store"
 import { AuthUtils } from "@/lib/auth-utils"
 import { toast } from "sonner"
 import ProtectedRoute from "@/components/protected-route"
@@ -33,15 +33,20 @@ interface WishlistItem {
 
 export default function WishlistPage() {
   const { user, isAuthenticated } = useAuthStore()
+  const { addItem } = useCartStore()
+  const { items: wishlistProductIds, removeItem, loadWishlist } = useWishlistStore()
   const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
-  // Fetch wishlist items
+  // Fetch detailed wishlist items
   useEffect(() => {
-    const fetchWishlist = async () => {
+    const fetchWishlistDetails = async () => {
       if (!isAuthenticated) return
       
       try {
+        setIsLoading(true)
+        await loadWishlist()
+        
         const response = await AuthUtils.authenticatedFetch('/api/user/wishlist')
         
         if (response.ok) {
@@ -58,44 +63,30 @@ export default function WishlistPage() {
       }
     }
 
-    fetchWishlist()
-  }, [isAuthenticated])
+    fetchWishlistDetails()
+  }, [isAuthenticated, loadWishlist])
 
   const removeFromWishlist = async (productId: string) => {
     try {
-      const response = await AuthUtils.authenticatedFetch(`/api/user/wishlist/${productId}`, {
-        method: 'DELETE'
-      })
-      
-      if (response.ok) {
-        setWishlistItems(prev => prev.filter(item => item.product.id !== productId))
-        toast.success('Removed from wishlist')
-      } else {
-        toast.error('Failed to remove from wishlist')
-      }
+      await removeItem(productId)
+      setWishlistItems(prev => prev.filter(item => item.product.id !== productId))
+      toast.success('Removed from wishlist')
     } catch (error) {
       console.error('Error removing from wishlist:', error)
       toast.error('Failed to remove item')
     }
   }
 
-  const addToCart = async (productId: string) => {
+  const addToCart = async (product: WishlistItem['product']) => {
     try {
-      const response = await AuthUtils.authenticatedFetch('/api/cart', {
-        method: 'POST',
-        body: JSON.stringify({
-          productId,
-          quantity: 1
-        })
+      await addItem({
+        productId: product.id, // Use string ObjectId directly
+        quantity: 1,
+        price: product.discountPrice || product.price
       })
-      
-      if (response.ok) {
-        toast.success('Added to cart')
-        // Trigger cart update event
-        window.dispatchEvent(new CustomEvent('cartUpdated'))
-      } else {
-        toast.error('Failed to add to cart')
-      }
+      toast.success('Added to cart')
+      // Trigger cart update event
+      window.dispatchEvent(new CustomEvent('cartUpdated'))
     } catch (error) {
       console.error('Error adding to cart:', error)
       toast.error('Failed to add to cart')
@@ -179,7 +170,7 @@ export default function WishlistPage() {
                 onClick={() => {
                   wishlistItems.forEach(item => {
                     if (item.product.inStock) {
-                      addToCart(item.product.id)
+                      addToCart(item.product)
                     }
                   })
                 }}
@@ -277,7 +268,7 @@ export default function WishlistPage() {
 
                       <div className="flex gap-2">
                         <Button
-                          onClick={() => addToCart(item.product.id)}
+                          onClick={() => addToCart(item.product)}
                           disabled={!item.product.inStock}
                           className="flex-1 bg-[#D4AF37] hover:bg-[#B8941F] text-white disabled:opacity-50"
                         >

@@ -1,16 +1,27 @@
-import { create } from 'zustand'
+ import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import { ICartItem, IProduct, IUser, Address } from '@/lib/models'
 import { TokenStorage } from '@/lib/cookies'
+import { AuthUtils } from '@/lib/auth-utils'
+
+// Guest cart item (doesn't require userId)
+interface GuestCartItem {
+  _id?: string
+  productId: string  // Changed from number to string to store ObjectId
+  variantId?: string
+  quantity: number
+  price: number
+  addedAt: Date
+}
 
 // Cart Store
 interface CartStore {
-  items: ICartItem[]
+  items: (ICartItem | GuestCartItem)[]
   isOpen: boolean
   isLoading: boolean
-  addItem: (item: Omit<ICartItem, 'addedAt'>) => Promise<void>
-  removeItem: (productId: number, variantId?: string) => Promise<void>
-  updateQuantity: (productId: number, quantity: number, variantId?: string) => Promise<void>
+  addItem: (item: Omit<ICartItem, 'addedAt' | 'userId' | '_id'>) => Promise<void>
+  removeItem: (productId: string, variantId?: string) => Promise<void>  // Changed from number to string
+  updateQuantity: (productId: string, quantity: number, variantId?: string) => Promise<void>  // Changed from number to string
   clearCart: () => Promise<void>
   toggleCart: () => void
   getTotalItems: () => number
@@ -29,45 +40,61 @@ export const useCartStore = create<CartStore>()(
       addItem: async (newItem) => {
         set({ isLoading: true })
         try {
-          // Check if user is authenticated
+          console.log('Adding item to cart:', newItem)
           const { isAuthenticated } = useAuthStore.getState()
           
-          if (isAuthenticated) {
-            // Sync with server for authenticated users
-            const response = await fetch('/api/cart', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              credentials: 'include',
-              body: JSON.stringify({
-                productId: newItem.productId,
-                quantity: newItem.quantity,
-                variantId: newItem.variantId,
-                price: newItem.price
+          // Always call API to validate product exists and is in stock
+          const response = isAuthenticated 
+            ? await AuthUtils.authenticatedFetch('/api/cart', {
+                method: 'POST',
+                body: JSON.stringify({
+                  productId: newItem.productId,
+                  quantity: newItem.quantity,
+                  variantId: newItem.variantId,
+                  price: newItem.price
+                })
               })
-            })
+            : await fetch('/api/cart', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                  productId: newItem.productId,
+                  quantity: newItem.quantity,
+                  variantId: newItem.variantId,
+                  price: newItem.price
+                })
+              })
 
-            if (response.ok) {
-              // Reload cart from server
+          if (response.ok) {
+            const result = await response.json()
+            console.log('Cart API response:', result)
+            
+            if (isAuthenticated) {
+              // Reload cart from server for authenticated users
               await get().loadCart()
             } else {
-              throw new Error('Failed to add item to cart')
+              // Update local storage for guest users
+              const items = get().items
+              const existingItemIndex = items.findIndex(
+                item => item.productId === newItem.productId && item.variantId === newItem.variantId
+              )
+              
+              if (existingItemIndex > -1) {
+                // Update quantity if item exists
+                const updatedItems = [...items]
+                updatedItems[existingItemIndex].quantity += newItem.quantity
+                set({ items: updatedItems })
+              } else {
+                // Add new item
+                set({ items: [...items, { ...newItem, addedAt: new Date() }] })
+              }
             }
           } else {
-            // Local storage for guest users
-            const items = get().items
-            const existingItemIndex = items.findIndex(
-              item => item.productId === newItem.productId && item.variantId === newItem.variantId
-            )
-            
-            if (existingItemIndex > -1) {
-              // Update quantity if item exists
-              const updatedItems = [...items]
-              updatedItems[existingItemIndex].quantity += newItem.quantity
-              set({ items: updatedItems })
-            } else {
-              // Add new item
-              set({ items: [...items, { ...newItem, addedAt: new Date() }] })
-            }
+            const errorData = await response.json()
+            console.error('Cart API error:', errorData)
+            throw new Error(errorData.error || 'Failed to add item to cart')
           }
         } catch (error) {
           console.error('Error adding item to cart:', error)
@@ -83,10 +110,8 @@ export const useCartStore = create<CartStore>()(
           const { isAuthenticated } = useAuthStore.getState()
           
           if (isAuthenticated) {
-            const response = await fetch('/api/cart', {
+            const response = await AuthUtils.authenticatedFetch('/api/cart', {
               method: 'DELETE',
-              headers: { 'Content-Type': 'application/json' },
-              credentials: 'include',
               body: JSON.stringify({ productId, variantId })
             })
 
@@ -121,10 +146,8 @@ export const useCartStore = create<CartStore>()(
           const { isAuthenticated } = useAuthStore.getState()
           
           if (isAuthenticated) {
-            const response = await fetch('/api/cart', {
+            const response = await AuthUtils.authenticatedFetch('/api/cart', {
               method: 'PUT',
-              headers: { 'Content-Type': 'application/json' },
-              credentials: 'include',
               body: JSON.stringify({ productId, quantity, variantId })
             })
 
@@ -156,9 +179,8 @@ export const useCartStore = create<CartStore>()(
           const { isAuthenticated } = useAuthStore.getState()
           
           if (isAuthenticated) {
-            const response = await fetch('/api/cart', {
-              method: 'DELETE',
-              credentials: 'include'
+            const response = await AuthUtils.authenticatedFetch('/api/cart', {
+              method: 'DELETE'
             })
 
             if (!response.ok) {
@@ -217,13 +239,13 @@ export const useCartStore = create<CartStore>()(
 
         try {
           set({ isLoading: true })
-          const response = await fetch('/api/cart', {
-            credentials: 'include'
-          })
+          const response = await AuthUtils.authenticatedFetch('/api/cart')
 
           if (response.ok) {
             const data = await response.json()
             set({ items: data.items || [] })
+          } else {
+            console.error('Failed to load cart:', response.statusText)
           }
         } catch (error) {
           console.error('Error loading cart:', error)
@@ -241,32 +263,125 @@ export const useCartStore = create<CartStore>()(
 
 // Wishlist Store
 interface WishlistStore {
-  items: number[]
-  addItem: (productId: number) => void
-  removeItem: (productId: number) => void
-  isInWishlist: (productId: number) => boolean
+  items: string[]
+  isLoading: boolean
+  addItem: (productId: string) => Promise<boolean>
+  removeItem: (productId: string) => Promise<boolean>
+  isInWishlist: (productId: string) => boolean
   clearWishlist: () => void
+  loadWishlist: () => Promise<void>
+  syncWithServer: () => Promise<void>
 }
 
 export const useWishlistStore = create<WishlistStore>()(
   persist(
     (set, get) => ({
       items: [],
+      isLoading: false,
       
-      addItem: (productId) => {
+      addItem: async (productId) => {
+        const { isAuthenticated } = useAuthStore.getState()
         const items = get().items
-        if (!items.includes(productId)) {
-          set({ items: [...items, productId] })
+        
+        if (items.includes(productId)) return true
+        
+        // Optimistically update local state
+        set({ items: [...items, productId] })
+        
+        if (isAuthenticated) {
+          try {
+            const response = await AuthUtils.authenticatedFetch('/api/user/wishlist', {
+              method: 'POST',
+              body: JSON.stringify({ productId })
+            })
+
+            if (!response.ok) {
+              // Revert on error
+              set({ items: items })
+              console.error('Failed to add to wishlist:', response.statusText)
+              return false
+            }
+            return true
+          } catch (error) {
+            // Revert on error
+            set({ items: items })
+            console.error('Error adding to wishlist:', error)
+            return false
+          }
         }
+
+        return true
       },
       
-      removeItem: (productId) => {
-        set({ items: get().items.filter(id => id !== productId) })
+      removeItem: async (productId) => {
+        const { isAuthenticated } = useAuthStore.getState()
+        const items = get().items
+        const newItems = items.filter(id => id !== productId)
+        
+        // Optimistically update local state
+        set({ items: newItems })
+        
+        if (isAuthenticated) {
+          try {
+            const response = await AuthUtils.authenticatedFetch('/api/user/wishlist', {
+              method: 'DELETE',
+              body: JSON.stringify({ productId })
+            })
+
+            if (!response.ok) {
+              // Revert on error
+              set({ items: items })
+              console.error('Failed to remove from wishlist:', response.statusText)
+              return false
+            }
+            return true
+          } catch (error) {
+            // Revert on error
+            set({ items: items })
+            console.error('Error removing from wishlist:', error)
+            return false
+          }
+        }
+
+        return true
       },
       
       isInWishlist: (productId) => get().items.includes(productId),
       
-      clearWishlist: () => set({ items: [] })
+      clearWishlist: () => set({ items: [] }),
+      
+      loadWishlist: async () => {
+        const { isAuthenticated } = useAuthStore.getState()
+        if (!isAuthenticated) return
+
+        try {
+          set({ isLoading: true })
+          const response = await AuthUtils.authenticatedFetch('/api/user/wishlist')
+
+          if (response.ok) {
+            const data = await response.json()
+            const productIds = (data.items || []).map((item: any) => {
+              // data.items contain { id: productId, product: { id: string | number } }
+              const pid = item.product?.id ?? item.id ?? item.productId
+              return pid ? String(pid) : null
+            }).filter(Boolean)
+            set({ items: productIds as string[] })
+          } else {
+            console.error('Failed to load wishlist:', response.statusText)
+          }
+        } catch (error) {
+          console.error('Error loading wishlist:', error)
+        } finally {
+          set({ isLoading: false })
+        }
+      },
+      
+      syncWithServer: async () => {
+        const { isAuthenticated } = useAuthStore.getState()
+        if (!isAuthenticated) return
+        
+        await get().loadWishlist()
+      }
     }),
     {
       name: 'wishlist-storage',

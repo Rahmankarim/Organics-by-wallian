@@ -116,7 +116,7 @@ export interface Address {
 export interface ICartItem {
   _id?: string
   userId: string
-  productId: number
+  productId: string  // Changed from number to string to store ObjectId
   variantId?: string
   quantity: number
   price: number
@@ -138,6 +138,7 @@ export interface IOrder {
   paymentStatus: PaymentStatus
   paymentMethod: string
   paymentIntentId?: string
+  payment?: PaymentDetails
   shippingAddress: Address
   billingAddress?: Address
   trackingNumber?: string
@@ -149,7 +150,7 @@ export interface IOrder {
 }
 
 export interface OrderItem {
-  productId: number
+  productId: string  // Changed from number to string to store ObjectId
   variantId?: string
   name: string
   price: number
@@ -175,6 +176,19 @@ export type PaymentStatus =
   | 'cancelled'
   | 'refunded'
 
+// Payment Details Interface
+export interface PaymentDetails {
+  provider?: 'easypaisa' | 'razorpay' | 'stripe' | 'cod'
+  transactionId?: string
+  transactionRef?: string
+  status?: PaymentStatus
+  initiatedAt?: Date
+  completedAt?: Date
+  webhookData?: any
+  responseCode?: string
+  responseMessage?: string
+}
+
 // Coupon/Discount System
 export interface ICoupon {
   _id?: string
@@ -188,7 +202,7 @@ export interface ICoupon {
   validFrom: Date
   validTo: Date
   isActive: boolean
-  applicableProducts?: number[]
+  applicableProducts?: string[]  // Changed from number[] to string[] to store ObjectIds
   applicableCategories?: string[]
   createdAt: Date
 }
@@ -197,7 +211,7 @@ export interface ICoupon {
 export interface IReview {
   _id?: string
   userId: string
-  productId: number
+  productId: string  // Changed from number to string to store ObjectId
   rating: number
   title: string
   content: string
@@ -217,7 +231,7 @@ export interface IWishlist {
 }
 
 export interface WishlistItem {
-  productId: number
+  productId: string  // Changed from number to string to store ObjectId
   addedAt: Date
 }
 

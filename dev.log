@@ -1,0 +1,15 @@
+
+> my-v0-project@0.1.0 dev
+> next dev
+
+ ⚠ Port 3000 is in use, trying 3001 instead.
+ ⚠ Port 3001 is in use, trying 3002 instead.
+  ▲ Next.js 14.2.16
+  - Local:        http://localhost:3002
+  - Environments: .env.local
+  - Experiments (use with caution):
+    · esmExternals
+
+ ✓ Starting...
+ ✓ Ready in 5.1s
+npm error A complete log of this run can be found in: C:\Users\PMLS\AppData\Local\npm-cache\_logs\2025-10-03T03_43_04_195Z-debug-0.log

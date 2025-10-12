@@ -15,11 +15,11 @@ const nextConfig = {
   },
   async redirects() {
     return [
-      { 
-        source: '/verify-email', 
-        destination: '/verify', 
-        permanent: true 
-      }
+      {
+        source: "/verify-email",
+        destination: "/verify",
+        permanent: true,
+      },
     ];
   },
   async headers() {

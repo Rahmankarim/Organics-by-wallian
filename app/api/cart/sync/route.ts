@@ -2,16 +2,30 @@ import { NextRequest, NextResponse } from 'next/server'
 import dbConnect from '@/lib/mongoose'
 import { CartItem, Product } from '@/lib/mongoose'
 import { getUserFromRequest } from '@/lib/auth'
+import mongoose from 'mongoose'
+
+function isValidObjectId(id: string): boolean {
+  return mongoose.isValidObjectId(id)
+}
+
+async function resolveProduct(productRef: any) {
+  if (!productRef && productRef !== 0) return null
+  if (typeof productRef === 'string' && isValidObjectId(productRef)) {
+    return await Product.findById(productRef).lean()
+  }
+  if (typeof productRef === 'number' || (typeof productRef === 'string' && /^\d+$/.test(productRef))) {
+    const numericId = typeof productRef === 'string' ? parseInt(productRef, 10) : productRef
+    return await Product.findOne({ id: numericId }).lean()
+  }
+  return null
+}
 
 // POST - Sync local cart with server cart after login
 export async function POST(request: NextRequest) {
   try {
     const user = await getUserFromRequest(request)
     if (!user) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      )
+      return NextResponse.json({ message: 'Please login to add items to cart' }, { status: 401 })
     }
 
     const body = await request.json()
@@ -32,8 +46,8 @@ export async function POST(request: NextRequest) {
 
       if (!productId || !quantity || quantity <= 0) continue
 
-      // Verify product exists
-      const product = await Product.findOne({ id: productId }) as any
+  // Verify product exists
+  const product = await resolveProduct(productId) as any
       if (!product) continue
 
       // Check if item already exists in server cart

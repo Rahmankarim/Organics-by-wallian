@@ -1,0 +1,11 @@
+Fetch error TypeError: fetch failed
+    at node:internal/deps/undici/undici:15433:13
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async C:\Users\PMLS\Downloads\luxury-dry-fruits-ecommerce (1)\scripts\inspect-product.js:3:17 {
+  [cause]: AggregateError [ECONNREFUSED]: 
+      at internalConnectMultiple (node:net:1134:18)
+      at afterConnectMultiple (node:net:1715:7) {
+    code: 'ECONNREFUSED',
+    [errors]: [ [Error], [Error] ]
+  }
+}
