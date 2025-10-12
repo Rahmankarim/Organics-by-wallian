@@ -77,7 +77,7 @@ export default function CheckoutPage() {
     pincode: "",
     landmark: ""
   })
-  const [paymentMethod, setPaymentMethod] = useState("razorpay")
+  const [paymentMethod, setPaymentMethod] = useState("easypaisa")
   const [isProcessingPayment, setIsProcessingPayment] = useState(false)
   const [isLoadingCart, setIsLoadingCart] = useState(true)
   const [orderNotes, setOrderNotes] = useState("")
@@ -115,9 +115,9 @@ export default function CheckoutPage() {
           if (user) {
             setShippingAddress(prev => ({
               ...prev,
-              fullName: user.name || "",
+              fullName: `${user.firstName || ""} ${user.lastName || ""}`.trim(),
               email: user.email || "",
-              phoneNumber: user.phoneNumber || ""
+              phoneNumber: user.phone || ""
             }))
           }
         } else {
@@ -159,17 +159,17 @@ export default function CheckoutPage() {
       return false
     }
 
-    // Validate phone number
-    const phoneRegex = /^[6-9]\d{9}$/
+    // Validate phone number (Pakistani format)
+    const phoneRegex = /^(\+92|0)?3[0-9]{9}$/
     if (!phoneRegex.test(shippingAddress.phoneNumber)) {
-      toast.error('Please enter a valid 10-digit mobile number')
+      toast.error('Please enter a valid Pakistani mobile number (11 digits starting with 03)')
       return false
     }
 
-    // Validate pincode
-    const pincodeRegex = /^\d{6}$/
+    // Validate postal code (Pakistani format)
+    const pincodeRegex = /^\d{5}$/
     if (!pincodeRegex.test(shippingAddress.pincode)) {
-      toast.error('Please enter a valid 6-digit pincode')
+      toast.error('Please enter a valid 5-digit postal code')
       return false
     }
 
@@ -211,6 +211,42 @@ export default function CheckoutPage() {
         router.push(`/orders/${order.id}?payment=success`)
         toast.success('Order placed successfully!')
         return
+      }
+
+      // EasyPaisa payment
+      if (paymentMethod === 'easypaisa') {
+        try {
+          const easyPaisaResponse = await fetch('/api/easypaisa/initiate', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+              orderId: order.id,
+              amount: checkoutData.cartSummary.total,
+              customerPhone: shippingAddress.phoneNumber,
+              customerEmail: shippingAddress.email,
+              returnUrl: `${window.location.origin}/order-success?orderId=${order.id}&payment=success`,
+              cancelUrl: `${window.location.origin}/order-success?orderId=${order.id}&payment=cancelled`
+            })
+          })
+
+          const easyPaisaData = await easyPaisaResponse.json()
+
+          if (easyPaisaData.success && easyPaisaData.redirectUrl) {
+            // Redirect to EasyPaisa payment page
+            window.location.href = easyPaisaData.redirectUrl
+            return
+          } else {
+            throw new Error(easyPaisaData.error || 'Failed to initiate EasyPaisa payment')
+          }
+        } catch (error: any) {
+          console.error('EasyPaisa payment error:', error)
+          toast.error(error.message || 'Failed to process EasyPaisa payment')
+          setIsProcessingPayment(false)
+          return
+        }
       }
 
       // Razorpay payment
@@ -361,7 +397,7 @@ export default function CheckoutPage() {
                       id="phoneNumber"
                       value={shippingAddress.phoneNumber}
                       onChange={(e) => updateShippingAddress('phoneNumber', e.target.value)}
-                      placeholder="Enter 10-digit mobile number"
+                      placeholder="Enter mobile number (03xxxxxxxxx)"
                     />
                   </div>
                 </div>
@@ -408,52 +444,30 @@ export default function CheckoutPage() {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="state">State *</Label>
+                    <Label htmlFor="state">Province *</Label>
                     <Select value={shippingAddress.state} onValueChange={(value) => updateShippingAddress('state', value)}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select state" />
+                        <SelectValue placeholder="Select province" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="andhra-pradesh">Andhra Pradesh</SelectItem>
-                        <SelectItem value="arunachal-pradesh">Arunachal Pradesh</SelectItem>
-                        <SelectItem value="assam">Assam</SelectItem>
-                        <SelectItem value="bihar">Bihar</SelectItem>
-                        <SelectItem value="chhattisgarh">Chhattisgarh</SelectItem>
-                        <SelectItem value="goa">Goa</SelectItem>
-                        <SelectItem value="gujarat">Gujarat</SelectItem>
-                        <SelectItem value="haryana">Haryana</SelectItem>
-                        <SelectItem value="himachal-pradesh">Himachal Pradesh</SelectItem>
-                        <SelectItem value="jharkhand">Jharkhand</SelectItem>
-                        <SelectItem value="karnataka">Karnataka</SelectItem>
-                        <SelectItem value="kerala">Kerala</SelectItem>
-                        <SelectItem value="madhya-pradesh">Madhya Pradesh</SelectItem>
-                        <SelectItem value="maharashtra">Maharashtra</SelectItem>
-                        <SelectItem value="manipur">Manipur</SelectItem>
-                        <SelectItem value="meghalaya">Meghalaya</SelectItem>
-                        <SelectItem value="mizoram">Mizoram</SelectItem>
-                        <SelectItem value="nagaland">Nagaland</SelectItem>
-                        <SelectItem value="odisha">Odisha</SelectItem>
                         <SelectItem value="punjab">Punjab</SelectItem>
-                        <SelectItem value="rajasthan">Rajasthan</SelectItem>
-                        <SelectItem value="sikkim">Sikkim</SelectItem>
-                        <SelectItem value="tamil-nadu">Tamil Nadu</SelectItem>
-                        <SelectItem value="telangana">Telangana</SelectItem>
-                        <SelectItem value="tripura">Tripura</SelectItem>
-                        <SelectItem value="uttar-pradesh">Uttar Pradesh</SelectItem>
-                        <SelectItem value="uttarakhand">Uttarakhand</SelectItem>
-                        <SelectItem value="west-bengal">West Bengal</SelectItem>
-                        <SelectItem value="delhi">Delhi</SelectItem>
+                        <SelectItem value="sindh">Sindh</SelectItem>
+                        <SelectItem value="khyber-pakhtunkhwa">Khyber Pakhtunkhwa</SelectItem>
+                        <SelectItem value="balochistan">Balochistan</SelectItem>
+                        <SelectItem value="gilgit-baltistan">Gilgit-Baltistan</SelectItem>
+                        <SelectItem value="azad-kashmir">Azad Jammu & Kashmir</SelectItem>
+                        <SelectItem value="islamabad">Islamabad Capital Territory</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   <div>
-                    <Label htmlFor="pincode">Pincode *</Label>
+                    <Label htmlFor="pincode">Postal Code *</Label>
                     <Input
                       id="pincode"
                       value={shippingAddress.pincode}
                       onChange={(e) => updateShippingAddress('pincode', e.target.value)}
-                      placeholder="6-digit pincode"
-                      maxLength={6}
+                      placeholder="5-digit postal code"
+                      maxLength={5}
                     />
                   </div>
                 </div>
@@ -481,6 +495,19 @@ export default function CheckoutPage() {
               <CardContent>
                 <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod}>
                   <div className="flex items-center space-x-2 p-4 border rounded-lg">
+                    <RadioGroupItem value="easypaisa" id="easypaisa" />
+                    <Label htmlFor="easypaisa" className="flex-1 cursor-pointer">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-medium">EasyPaisa</p>
+                          <p className="text-sm text-gray-600">Pay securely with EasyPaisa wallet</p>
+                        </div>
+                        <Badge variant="secondary" className="bg-green-100 text-green-800">Recommended</Badge>
+                      </div>
+                    </Label>
+                  </div>
+                  
+                  <div className="flex items-center space-x-2 p-4 border rounded-lg">
                     <RadioGroupItem value="razorpay" id="razorpay" />
                     <Label htmlFor="razorpay" className="flex-1 cursor-pointer">
                       <div className="flex items-center justify-between">
@@ -488,7 +515,6 @@ export default function CheckoutPage() {
                           <p className="font-medium">Credit/Debit Card, UPI, Net Banking</p>
                           <p className="text-sm text-gray-600">Powered by Razorpay</p>
                         </div>
-                        <Badge variant="secondary" className="bg-blue-100 text-blue-800">Recommended</Badge>
                       </div>
                     </Label>
                   </div>
@@ -548,7 +574,7 @@ export default function CheckoutPage() {
                         )}
                         <p className="text-xs text-gray-600">Qty: {item.quantity}</p>
                       </div>
-                      <p className="text-sm font-medium">₹{(item.price * item.quantity).toLocaleString()}</p>
+                      <p className="text-sm font-medium">Rs. {(item.price * item.quantity).toLocaleString()}</p>
                     </div>
                   ))}
                 </div>
@@ -559,7 +585,7 @@ export default function CheckoutPage() {
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
                     <span>Subtotal ({checkoutData.cartSummary.totalItems} items)</span>
-                    <span>₹{checkoutData.cartSummary.subtotal.toLocaleString()}</span>
+                    <span>Rs. {checkoutData.cartSummary.subtotal.toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span>Shipping</span>
@@ -567,18 +593,18 @@ export default function CheckoutPage() {
                       {checkoutData.cartSummary.shipping === 0 ? (
                         <span className="text-green-600">FREE</span>
                       ) : (
-                        `₹${checkoutData.cartSummary.shipping}`
+                        `Rs. ${checkoutData.cartSummary.shipping}`
                       )}
                     </span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span>Tax (18% GST)</span>
-                    <span>₹{checkoutData.cartSummary.tax.toLocaleString()}</span>
+                    <span>Rs. {checkoutData.cartSummary.tax.toLocaleString()}</span>
                   </div>
                   <Separator />
                   <div className="flex justify-between font-semibold">
                     <span>Total</span>
-                    <span className="text-[#355E3B]">₹{checkoutData.cartSummary.total.toLocaleString()}</span>
+                    <span className="text-[#355E3B]">Rs. {checkoutData.cartSummary.total.toLocaleString()}</span>
                   </div>
                 </div>
 
@@ -597,10 +623,15 @@ export default function CheckoutPage() {
                       <CheckCircle className="mr-2 h-4 w-4" />
                       Place Order (COD)
                     </>
+                  ) : paymentMethod === 'easypaisa' ? (
+                    <>
+                      <CreditCard className="mr-2 h-4 w-4" />
+                      Pay with EasyPaisa - Rs. {checkoutData.cartSummary.total.toLocaleString()}
+                    </>
                   ) : (
                     <>
                       <CreditCard className="mr-2 h-4 w-4" />
-                      Pay ₹{checkoutData.cartSummary.total.toLocaleString()}
+                      Pay Rs. {checkoutData.cartSummary.total.toLocaleString()}
                     </>
                   )}
                 </Button>
@@ -612,7 +643,7 @@ export default function CheckoutPage() {
                   </div>
                   <div className="flex items-center gap-2">
                     <Truck className="h-3 w-3 text-blue-600" />
-                    <span>Free delivery on orders above ₹999</span>
+                    <span>Free delivery on orders above Rs. 999</span>
                   </div>
                 </div>
               </CardContent>

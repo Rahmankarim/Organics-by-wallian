@@ -55,6 +55,7 @@ export async function POST(request: NextRequest) {
     const response = NextResponse.json({ 
       success: true,
       message: 'Login successful',
+      token: token, // Include token in response for client-side storage
       user: {
         id: user._id,
         email: user.email,
@@ -64,8 +65,8 @@ export async function POST(request: NextRequest) {
       }
     }, { status: 200 })
 
-    // Set JWT as httpOnly cookie
-    response.cookies.set('token', token, {
+    // Set JWT as httpOnly cookie (for server-side requests)
+    response.cookies.set('auth-token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',

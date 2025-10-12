@@ -273,9 +273,9 @@ export default function OrderPage() {
                     </div>
                     <div className="text-right">
                       <p className="font-medium text-[#355E3B]">
-                        ₹{(item.price * item.quantity).toLocaleString()}
+                        Rs. {(item.price * item.quantity).toLocaleString()}
                       </p>
-                      <p className="text-sm text-gray-500">₹{item.price} each</p>
+                      <p className="text-sm text-gray-500">Rs. {item.price} each</p>
                     </div>
                   </div>
                 ))}
@@ -327,7 +327,7 @@ export default function OrderPage() {
               <CardContent className="space-y-4">
                 <div className="flex justify-between">
                   <span>Subtotal ({order.summary.totalItems} items)</span>
-                  <span>₹{order.summary.subtotal.toLocaleString()}</span>
+                  <span>Rs. {order.summary.subtotal.toLocaleString()}</span>
                 </div>
                 
                 <div className="flex justify-between">
@@ -336,21 +336,21 @@ export default function OrderPage() {
                     {order.summary.shipping === 0 ? (
                       <span className="text-green-600">FREE</span>
                     ) : (
-                      `₹${order.summary.shipping}`
+                      `Rs. ${order.summary.shipping}`
                     )}
                   </span>
                 </div>
                 
                 <div className="flex justify-between">
                   <span>Tax (18% GST)</span>
-                  <span>₹{order.summary.tax.toLocaleString()}</span>
+                  <span>Rs. {order.summary.tax.toLocaleString()}</span>
                 </div>
                 
                 <Separator />
                 
                 <div className="flex justify-between text-lg font-semibold">
                   <span>Total</span>
-                  <span className="text-[#355E3B]">₹{order.summary.total.toLocaleString()}</span>
+                  <span className="text-[#355E3B]">Rs. {order.summary.total.toLocaleString()}</span>
                 </div>
               </CardContent>
             </Card>

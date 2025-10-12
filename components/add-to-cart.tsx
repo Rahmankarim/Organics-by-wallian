@@ -38,36 +38,46 @@ export default function AddToCart({ product }: AddToCartProps) {
   }
 
   const handleAddToCart = async () => {
+    if (!product._id) {
+      toast.error('Product ID is missing')
+      return
+    }
+
     if (!product.inStock || currentStock <= 0) {
       toast.error('Product out of stock')
       return
     }
 
-    if (!isAuthenticated) {
-      toast.error('Please login to add items to cart')
-      return
-    }
+    console.log('Add to cart clicked:', { 
+      productId: product._id, 
+      quantity, 
+      variantId: selectedVariant?.id,
+      price: currentPrice 
+    })
 
     setIsAdding(true)
+    
     try {
       await addItem({
-        productId: product.id,
+        productId: product._id!,
         quantity,
         variantId: selectedVariant?.id,
-        price: currentPrice,
-        productName: product.name,
-        productSlug: product.slug,
-        productImage: product.images[0] || '/placeholder.svg',
-        weight: selectedVariant?.value || product.weight
+        price: currentPrice
       })
-
-      toast.success('Added to cart!', {
-        description: `${quantity} × ${product.name} added to your cart`
-      })
+      
+      console.log('Item added successfully')
+      
+      if (isAuthenticated) {
+        toast.success(`Added ${quantity} ${product.name} to cart`)
+      } else {
+        toast.success(`Added ${quantity} ${product.name} to cart (Guest mode)`)
+      }
+      
+      // Reset quantity to 1 after adding
+      setQuantity(1)
     } catch (error) {
-      toast.error('Failed to add to cart', {
-        description: error instanceof Error ? error.message : 'Please try again'
-      })
+      console.error('Add to cart error:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to add item to cart')
     } finally {
       setIsAdding(false)
     }
@@ -92,12 +102,12 @@ export default function AddToCart({ product }: AddToCartProps) {
           <div className="space-y-2">
             <div className="flex items-center gap-3">
               <span className="text-3xl font-bold text-[#355E3B]">
-                ₹{currentPrice.toLocaleString()}
+                Rs. {currentPrice.toLocaleString()}
               </span>
               {product.originalPrice && product.originalPrice > currentPrice && (
                 <>
                   <span className="text-lg text-gray-500 line-through">
-                    ₹{product.originalPrice.toLocaleString()}
+                    Rs. {product.originalPrice.toLocaleString()}
                   </span>
                   <Badge variant="destructive" className="bg-red-500">
                     {Math.round(((product.originalPrice - currentPrice) / product.originalPrice) * 100)}% OFF
@@ -130,7 +140,7 @@ export default function AddToCart({ product }: AddToCartProps) {
                     <SelectItem key={variant.id} value={variant.id}>
                       <div className="flex justify-between items-center w-full">
                         <span>{variant.name} ({variant.value})</span>
-                        <span className="ml-4">₹{variant.price}</span>
+                        <span className="ml-4">Rs. {variant.price}</span>
                       </div>
                     </SelectItem>
                   ))}
@@ -218,7 +228,7 @@ export default function AddToCart({ product }: AddToCartProps) {
           <div className="space-y-3 pt-4 border-t">
             <div className="flex items-center gap-3 text-sm">
               <Truck className="h-4 w-4 text-blue-600" />
-              <span>Free delivery on orders above ₹999</span>
+              <span>Free delivery on orders above Rs. 999</span>
             </div>
             <div className="flex items-center gap-3 text-sm">
               <Shield className="h-4 w-4 text-green-600" />

@@ -33,7 +33,7 @@ export const generateToken = (payload: JWTPayload, expiresIn?: string): string =
   return jwt.sign(payload, config.secret, { 
     expiresIn: expiresIn || config.expiresIn,
     algorithm: 'HS256'
-  })
+  } as jwt.SignOptions)
 }
 
 export const verifyToken = (token: string): JWTPayload | null => {
@@ -53,18 +53,35 @@ export const generateSecureToken = (): string => {
 // Extract user from request
 export const getUserFromRequest = async (request: NextRequest): Promise<any | null> => {
   try {
-    const token = request.headers.get('authorization')?.replace('Bearer ', '') ||
-                  request.cookies.get('auth-token')?.value
+    // Get token from Authorization header or cookies
+    const authHeader = request.headers.get('authorization')
+    const token = authHeader?.replace('Bearer ', '') || 
+                  request.cookies.get('auth-token')?.value ||
+                  request.cookies.get('token')?.value // Fallback for old cookie name
 
-    if (!token) return null
+    if (!token) {
+      console.log('No token found in request')
+      return null
+    }
 
+    // Verify the token
     const payload = verifyToken(token)
-    if (!payload) return null
+    if (!payload) {
+      console.log('Token verification failed')
+      return null
+    }
 
     await dbConnect()
     const user = await User.findById(payload.userId).select('-password')
+    
+    if (!user) {
+      console.log('User not found for token')
+      return null
+    }
+    
     return user
   } catch (error) {
+    console.error('getUserFromRequest error:', error)
     return null
   }
 }

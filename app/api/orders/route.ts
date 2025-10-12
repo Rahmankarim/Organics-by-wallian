@@ -188,29 +188,49 @@ export async function POST(request: NextRequest) {
     // Calculate taxes and total
     const taxRate = 0.18 // 18% GST
     const taxAmount = (subtotal - discountAmount) * taxRate
-    const shippingFee = subtotal > 1000 ? 0 : 100 // Free shipping over ₹1000
+    const shippingFee = subtotal > 1000 ? 0 : 100 // Free shipping over Rs. 1000
     const totalAmount = subtotal - discountAmount + taxAmount + shippingFee
 
-    // Generate order ID
+    // Generate order number
     const orderCount = await Order.countDocuments()
-    const orderId = `ORD${Date.now()}${(orderCount + 1).toString().padStart(4, '0')}`
+    const orderNumber = `ORD${Date.now()}${(orderCount + 1).toString().padStart(4, '0')}`
+
+    // Transform shipping address to match Address interface
+    const fullNameParts = shippingAddress.fullName.trim().split(' ')
+    const firstName = fullNameParts[0] || ''
+    const lastName = fullNameParts.length > 1 ? fullNameParts.slice(1).join(' ') : ''
+    
+    const addressData = {
+      type: 'home' as const,
+      firstName,
+      lastName,
+      address: shippingAddress.addressLine1,
+      apartment: shippingAddress.addressLine2 || '',
+      city: shippingAddress.city,
+      state: shippingAddress.state,
+      zipCode: shippingAddress.pincode,
+      country: 'Pakistan',
+      phone: shippingAddress.phoneNumber,
+      isDefault: false
+    }
 
     // Create order
     const order = await Order.create({
-      orderId,
+      orderNumber,
       userId: user._id,
       items,
       subtotal,
-      discountAmount,
-      couponCode,
-      taxAmount,
-      shippingFee,
-      totalAmount,
-      shippingAddress,
+      discount: discountAmount,
+      tax: taxAmount,
+      shippingCost: shippingFee,
+      total: totalAmount,
+      shippingAddress: addressData,
       paymentMethod,
-      specialInstructions,
+      notes: specialInstructions,
       status: 'pending',
-      paymentStatus: 'pending'
+      paymentStatus: 'pending',
+      createdAt: new Date(),
+      updatedAt: new Date()
     })
 
     // Update product stock
@@ -222,22 +242,32 @@ export async function POST(request: NextRequest) {
           const variantIndex = product.variants.findIndex((v: any) => v.id === item.variantId)
           if (variantIndex !== -1) {
             product.variants[variantIndex].stockCount -= item.quantity
+            // Update only the specific variant using $set
+            await Product.updateOne(
+              { id: item.productId },
+              { $set: { [`variants.${variantIndex}.stockCount`]: product.variants[variantIndex].stockCount } }
+            )
           }
         } else {
-          // Update main product stock
-          product.stockCount -= item.quantity
-        }
-        
-        // Mark as out of stock if needed
-        const totalStock = item.variantId 
-          ? product.variants.reduce((total: number, v: any) => total + v.stockCount, 0)
-          : product.stockCount
+          // Update main product stock directly
+          const newStockCount = product.stockCount - item.quantity
+          const updateFields: any = { stockCount: newStockCount }
           
-        if (totalStock <= 0) {
-          product.inStock = false
+          // Mark as out of stock if needed
+          if (newStockCount <= 0) {
+            updateFields.inStock = false
+          }
+          
+          await Product.updateOne({ id: item.productId }, { $set: updateFields })
         }
         
-        await product.save()
+        // Check if product should be marked out of stock for variant products
+        if (item.variantId) {
+          const totalStock = product.variants.reduce((total: number, v: any) => total + v.stockCount, 0)
+          if (totalStock <= 0) {
+            await Product.updateOne({ id: item.productId }, { $set: { inStock: false } })
+          }
+        }
       }
     }
 
@@ -246,11 +276,11 @@ export async function POST(request: NextRequest) {
 
     // Track analytics
     await Analytics.create({
-      type: 'order_placed',
+      type: 'purchase',
       userId: user._id,
       sessionId: request.headers.get('x-session-id') || 'anonymous',
       data: {
-        orderId,
+        orderId: orderNumber,
         totalAmount,
         itemCount: items.length,
         paymentMethod
@@ -259,9 +289,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       message: 'Order placed successfully',
-      orderId,
+      orderId: orderNumber,
       order: {
-        orderId,
+        orderId: orderNumber,
         totalAmount,
         status: 'pending',
         items: items.length

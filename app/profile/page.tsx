@@ -123,7 +123,7 @@ function ProfilePage() {
     city: '',
     state: '',
     zipCode: '',
-    country: 'India',
+    country: 'Pakistan',
     phone: '',
     isDefault: false
   })

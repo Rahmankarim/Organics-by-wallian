@@ -160,7 +160,7 @@ export default function AdminCustomersPage() {
               <Users className="w-8 h-8 text-[#D4AF37]" />
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Top Spender</p>
-                <p className="text-2xl font-bold text-[#D4AF37]">₹22,400</p>
+                <p className="text-2xl font-bold text-[#D4AF37]">Rs. 22,400</p>
               </div>
             </div>
           </CardContent>
@@ -243,7 +243,7 @@ export default function AdminCustomersPage() {
                       </div>
                     </TableCell>
                     <TableCell>{customer.totalOrders}</TableCell>
-                    <TableCell>₹{customer.totalSpent.toLocaleString()}</TableCell>
+                    <TableCell>Rs. {customer.totalSpent.toLocaleString()}</TableCell>
                     <TableCell>{new Date(customer.joinedAt).toLocaleDateString()}</TableCell>
                     <TableCell>
                       <Badge className={getStatusColor(customer.status)}>
