@@ -13,6 +13,12 @@ const nextConfig = {
     esmExternals: "loose",
     serverComponentsExternalPackages: ["mongoose"],
   },
+  // Optimize build performance
+  swcMinify: true,
+  productionBrowserSourceMaps: false,
+  compiler: {
+    removeConsole: process.env.NODE_ENV === "production",
+  },
   async headers() {
     return [
       {

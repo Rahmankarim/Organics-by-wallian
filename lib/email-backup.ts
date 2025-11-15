@@ -54,11 +54,11 @@ export const sendVerificationCodeEmail = async (email: string, code: string): Pr
       const { error } = await resend.emails.send({
         from: process.env.FROM_EMAIL || 'onboarding@resend.dev',
         to: email,
-        subject: 'Your Verification Code - Organics by Wallian',
+        subject: 'Your Verification Code - Origiganics by Wallian',
         html: `
           <div style="max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif;">
             <div style="background-color: #355E3B; padding: 20px; text-align: center;">
-              <h1 style="color: white; margin: 0;">Organics by Wallian</h1>
+              <h1 style="color: white; margin: 0;">Origiganics by Wallian</h1>
               <p style="color: #D4AF37; margin: 5px 0;">Premium Dry Fruits</p>
             </div>
             <div style="padding: 30px 20px; background: #fff;">
@@ -69,7 +69,7 @@ export const sendVerificationCodeEmail = async (email: string, code: string): Pr
               <p style="color: #666; font-size: 0.9em; margin-top: 20px;">If you didn't request this code, please ignore this email.</p>
             </div>
             <div style="background-color: #f8f9fa; padding: 15px; text-align: center; color: #666; font-size: 0.8em;">
-              <p>© 2024 Organics by Wallian. All rights reserved.</p>
+              <p>© 2024 Origiganics by Wallian. All rights reserved.</p>
             </div>
           </div>
         `
@@ -92,13 +92,13 @@ export const sendVerificationCodeEmail = async (email: string, code: string): Pr
     }
 
     const mailOptions = {
-      from: `"Organics by Wallian" <${process.env.EMAIL_USER}>`,
+      from: `"Origiganics by Wallian" <${process.env.EMAIL_USER}>`,
       to: email,
-      subject: 'Your Verification Code - Organics by Wallian',
-      html: `
+      subject: 'Your Verification Code - Origiganics by Wallian',
+        html: `
         <div style="max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif;">
           <div style="background-color: #355E3B; padding: 20px; text-align: center;">
-            <h1 style="color: white; margin: 0;">Organics by Wallian</h1>
+            <h1 style="color: white; margin: 0;">Origiganics by Wallian</h1>
             <p style="color: #D4AF37; margin: 5px 0;">Premium Dry Fruits</p>
           </div>
           <div style="padding: 30px 20px; background: #fff;">
@@ -169,19 +169,19 @@ export const sendVerificationEmail = async (email: string, token: string): Promi
     const verificationUrl = `${process.env.NEXT_PUBLIC_APP_URL}/verify-email?token=${token}&email=${email}`
     
     const mailOptions = {
-      from: `"Organic Orchard" <${process.env.EMAIL_USER}>`,
+      from: `"Origiganic by Wallian" <${process.env.EMAIL_USER}>`,
       to: email,
-      subject: 'Verify Your Email - Organic Orchard',
+      subject: 'Verify Your Email - Origiganic by Wallian',
       html: `
         <div style="max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif;">
           <div style="background-color: #355E3B; padding: 20px; text-align: center;">
-            <h1 style="color: white; margin: 0;">Organic Orchard</h1>
+            <h1 style="color: white; margin: 0;">Origiganic by Wallian</h1>
             <p style="color: #D4AF37; margin: 5px 0;">Premium Dry Fruits</p>
           </div>
           
           <div style="padding: 30px; background-color: #f9f9f9;">
             <h2 style="color: #355E3B;">Verify Your Email Address</h2>
-            <p>Thank you for signing up for Organic Orchard! Please click the button below to verify your email address and complete your registration.</p>
+            <p>Thank you for signing up for Origiganic by Wallian! Please click the button below to verify your email address and complete your registration.</p>
             
             <div style="text-align: center; margin: 30px 0;">
               <a href="${verificationUrl}" 
@@ -203,7 +203,7 @@ export const sendVerificationEmail = async (email: string, token: string): Promi
           
           <div style="background-color: #355E3B; padding: 20px; text-align: center;">
             <p style="color: white; margin: 0; font-size: 14px;">
-              © ${new Date().getFullYear()} Organic Orchard. All rights reserved.
+              © ${new Date().getFullYear()} Origiganic by Wallian. All rights reserved.
             </p>
           </div>
         </div>
@@ -233,13 +233,13 @@ export const sendPasswordResetEmail = async (email: string, token: string): Prom
     const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL}/reset-password?token=${token}`
     
     const mailOptions = {
-      from: `"Organic Orchard" <${process.env.EMAIL_USER}>`,
+      from: `"Origiganic by Wallian" <${process.env.EMAIL_USER}>`,
       to: email,
-      subject: 'Reset Your Password - Organic Orchard',
+      subject: 'Reset Your Password - Origiganic by Wallian',
       html: `
         <div style="max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif;">
           <div style="background-color: #355E3B; padding: 20px; text-align: center;">
-            <h1 style="color: white; margin: 0;">Organic Orchard</h1>
+            <h1 style="color: white; margin: 0;">Origiganic by Wallian</h1>
             <p style="color: #D4AF37; margin: 5px 0;">Premium Dry Fruits</p>
           </div>
           
@@ -271,7 +271,7 @@ export const sendPasswordResetEmail = async (email: string, token: string): Prom
           
           <div style="background-color: #355E3B; padding: 20px; text-align: center;">
             <p style="color: white; margin: 0; font-size: 14px;">
-              © ${new Date().getFullYear()} Organic Orchard. All rights reserved.
+              © ${new Date().getFullYear()} Origiganic by Wallian. All rights reserved.
             </p>
           </div>
         </div>
@@ -299,19 +299,19 @@ export const sendWelcomeEmail = async (email: string, firstName: string): Promis
     }
     
     const mailOptions = {
-      from: `"Organic Orchard" <${process.env.EMAIL_USER}>`,
+      from: `"Origiganic by Wallian" <${process.env.EMAIL_USER}>`,
       to: email,
-      subject: 'Welcome to Organic Orchard!',
+      subject: 'Welcome to Origiganic by Wallian!',
       html: `
         <div style="max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif;">
           <div style="background-color: #355E3B; padding: 20px; text-align: center;">
-            <h1 style="color: white; margin: 0;">Welcome to Organic Orchard!</h1>
+            <h1 style="color: white; margin: 0;">Welcome to Origiganic by Wallian!</h1>
             <p style="color: #D4AF37; margin: 5px 0;">Premium Dry Fruits</p>
           </div>
           
           <div style="padding: 30px; background-color: #f9f9f9;">
             <h2 style="color: #355E3B;">Hello ${firstName}!</h2>
-            <p>Thank you for joining Organic Orchard! We're excited to have you as part of our community.</p>
+            <p>Thank you for joining Origiganic by Wallian! We're excited to have you as part of our community.</p>
             
             <h3 style="color: #355E3B;">What's Next?</h3>
             <ul style="color: #666;">
@@ -335,7 +335,7 @@ export const sendWelcomeEmail = async (email: string, firstName: string): Promis
           
           <div style="background-color: #355E3B; padding: 20px; text-align: center;">
             <p style="color: white; margin: 0; font-size: 14px;">
-              © ${new Date().getFullYear()} Organic Orchard. All rights reserved.
+              © ${new Date().getFullYear()} Origiganic by Wallian. All rights reserved.
             </p>
           </div>
         </div>

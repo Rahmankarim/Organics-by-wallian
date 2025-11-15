@@ -14,7 +14,7 @@ export default function AdminSettingsPage() {
   const [loading, setLoading] = useState(false)
   const [settings, setSettings] = useState({
     // General Settings
-    siteName: "Organic Orchard",
+    siteName: "Origiganics by Wallian",
     siteDescription: "Premium organic dry fruits and nuts",
     contactEmail: "admin@organicorchard.com",
     contactPhone: "+91 98765 43210",

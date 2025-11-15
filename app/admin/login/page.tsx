@@ -140,7 +140,7 @@ export default function AdminLogin() {
               Admin Portal
             </h1>
             <p style={{ color: '#6b7280' }}>
-              Organic Orchard Management System
+              Origiganics by Wallian Management System
             </p>
           </div>
 

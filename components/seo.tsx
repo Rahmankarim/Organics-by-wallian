@@ -9,15 +9,15 @@ interface SEOProps {
 }
 
 export default function SEO({ 
-  title = "Organics By Walian - Premium Dry Fruits",
+  title = "Origiganics by Wallian - Premium Dry Fruits",
   description = "Premium organic dry fruits sourced directly from the finest orchards. 100% organic, premium quality, fast delivery.",
   canonical,
   image = "/og-image.jpg",
   type = "website"
 }: SEOProps) {
-  const fullTitle = title.includes('Organics By Walian') 
+  const fullTitle = title.includes('Origiganics by Wallian') 
     ? title 
-    : `${title} | Organics By Walian`
+    : `${title} | Origiganics by Wallian`
 
   return (
     <Head>

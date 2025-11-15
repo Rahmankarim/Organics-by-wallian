@@ -15,17 +15,15 @@ export async function GET(request: NextRequest) {
         totalUsers: 0,
         recentOrders: [],
         lowStockProducts: [],
+        monthlyRevenue: [],
         orderStatusBreakdown: {}
       })
     }
 
     // Import MongoDB client only when needed
-    const { MongoClient } = await import('mongodb')
-    const uri = process.env.MONGODB_URI!
-
-    const client = new MongoClient(uri)
-    await client.connect()
-    const db = client.db('OrganicsByWalian')
+    const { default: clientPromise } = await import('@/lib/mongodb')
+    const client = await clientPromise
+    const db = client.db('organic_orchard')
 
     // Calculate totals
     const totalOrders = await db.collection('orders').countDocuments()
@@ -53,10 +51,36 @@ export async function GET(request: NextRequest) {
 
     // Get low stock products
     const lowStockProducts = await db.collection('products')
-      .find({ stock: { $lt: 20 } })
-      .sort({ stock: 1 })
+      .find({ stockCount: { $lt: 20 } })
+      .sort({ stockCount: 1 })
       .limit(10)
       .toArray()
+
+    // Monthly revenue for the last 6 months
+    const sixMonthsAgo = new Date()
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6)
+    
+    const monthlyRevenueData = await db.collection('orders').aggregate([
+      {
+        $match: {
+          createdAt: { $gte: sixMonthsAgo }
+        }
+      },
+      {
+        $group: {
+          _id: {
+            year: { $year: '$createdAt' },
+            month: { $month: '$createdAt' }
+          },
+          revenue: { $sum: '$total' }
+        }
+      },
+      {
+        $sort: { '_id.year': 1, '_id.month': 1 }
+      }
+    ]).toArray()
+
+    const monthlyRevenue = monthlyRevenueData.map(item => item.revenue)
 
     // Order status breakdown
     const statusBreakdown = await db.collection('orders').aggregate([
@@ -73,8 +97,6 @@ export async function GET(request: NextRequest) {
       orderStatusBreakdown[item._id] = item.count
     })
 
-    await client.close()
-
     return NextResponse.json({
       totalOrders,
       totalRevenue,
@@ -82,6 +104,7 @@ export async function GET(request: NextRequest) {
       totalUsers,
       recentOrders,
       lowStockProducts,
+      monthlyRevenue,
       orderStatusBreakdown
     })
 

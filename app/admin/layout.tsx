@@ -8,13 +8,11 @@ import {
   LayoutDashboard, 
   Package, 
   ShoppingCart, 
-  MessageCircle, 
   Users, 
   Settings, 
   LogOut, 
   Menu,
-  TrendingUp,
-  Heart
+  TrendingUp
 } from "lucide-react"
 import Link from "next/link"
 
@@ -104,18 +102,6 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       href: "/admin/analytics",
     },
     {
-      id: "reviews",
-      label: "Reviews",
-      icon: Heart,
-      href: "/admin/reviews",
-    },
-    {
-      id: "messages",
-      label: "Messages",
-      icon: MessageCircle,
-      href: "/admin/messages",
-    },
-    {
       id: "settings",
       label: "Settings",
       icon: Settings,
@@ -129,7 +115,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       {/* Header */}
       <div className="p-4 border-b border-white/10">
         <h2 className="text-xl font-bold text-[#D4AF37]">Admin Panel</h2>
-        <p className="text-sm text-gray-300 mt-1">Organic Orchard</p>
+        <p className="text-sm text-gray-300 mt-1">Origiganics by Wallian</p>
       </div>
 
       {/* Navigation */}

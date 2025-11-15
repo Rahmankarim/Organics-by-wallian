@@ -226,7 +226,7 @@ export default function CheckoutPage() {
             key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
             amount: Math.round(checkoutData.cartSummary.total * 100), // Amount in paise
             currency: 'INR',
-            name: 'Luxury Dry Fruits',
+            name: 'Origiganics by Wallian',
             description: `Order #${order.orderNumber}`,
             order_id: order.razorpayOrderId,
             handler: async function (response: any) {

@@ -48,7 +48,7 @@ This guide will help you deploy your Luxury Dry Fruits E-commerce platform to Ve
 3. **Set Environment Variables**:
    Click on "Environment Variables" and add the following:
 
-   ```bash
+   \`\`\`bash
    # Required Variables
    MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/OrganicsByWalian
    JWT_SECRET=your-super-secret-jwt-key-make-it-long-and-random-at-least-32-characters
@@ -68,7 +68,7 @@ This guide will help you deploy your Luxury Dry Fruits E-commerce platform to Ve
    STRIPE_SECRET_KEY=sk_live_your_stripe_secret_key
    STRIPE_PUBLISHABLE_KEY=pk_live_your_stripe_publishable_key
    STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret
-   ```
+   \`\`\`
 
 4. **Deploy**:
    - Click "Deploy"
@@ -76,7 +76,7 @@ This guide will help you deploy your Luxury Dry Fruits E-commerce platform to Ve
 
 ### Option B: Vercel CLI
 
-```bash
+\`\`\`bash
 # Install Vercel CLI
 npm i -g vercel
 
@@ -100,13 +100,13 @@ vercel env add NEXTAUTH_URL production
 
 # Deploy to production
 vercel --prod
-```
+\`\`\`
 
 ## 🔑 Step 3: Generate Secure Secrets
 
 Use these commands to generate secure secrets:
 
-```bash
+\`\`\`bash
 # For JWT_SECRET (Node.js)
 node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
 
@@ -114,7 +114,7 @@ node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
 node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 
 # Or use online generator: https://generate-secret.vercel.app/32
-```
+\`\`\`
 
 ## 🗄️ Step 4: Seed Your Database (Optional)
 
@@ -122,9 +122,9 @@ After deployment, you can populate your database with sample data:
 
 1. **Access your deployed site**: `https://your-project-name.vercel.app`
 2. **Call the seed endpoint**:
-   ```bash
+   \`\`\`bash
    curl -X POST https://your-project-name.vercel.app/api/admin/seed
-   ```
+   \`\`\`
 3. **Or visit in browser**: `https://your-project-name.vercel.app/api/admin/seed` (POST request)
 
 ## ✅ Step 5: Verify Deployment

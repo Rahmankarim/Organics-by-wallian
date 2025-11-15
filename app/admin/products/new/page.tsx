@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Separator } from "@/components/ui/separator"
-import { ArrowLeft, Save, Plus, Minus } from "lucide-react"
+import { ArrowLeft, Save, Plus, Minus, Upload, Image as ImageIcon } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 
@@ -68,6 +68,7 @@ const initialForm: ProductForm = {
 export default function AddProductPage() {
   const [form, setForm] = useState<ProductForm>(initialForm)
   const [loading, setLoading] = useState(false)
+  const [uploadingImage, setUploadingImage] = useState(false)
   const router = useRouter()
 
   const categories = [
@@ -124,6 +125,50 @@ export default function AddProductPage() {
       ...prev,
       [field]: prev[field].filter((_, i) => i !== index),
     }))
+  }
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file')
+      return
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Image size should be less than 5MB')
+      return
+    }
+
+    setUploadingImage(true)
+
+    try {
+      // Convert image to base64
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        const base64String = reader.result as string
+        
+        // Add the image to the images array
+        setForm((prev) => ({
+          ...prev,
+          images: [...prev.images.filter(img => img.trim() !== ''), base64String],
+        }))
+        
+        setUploadingImage(false)
+      }
+      reader.onerror = () => {
+        alert('Failed to read image file')
+        setUploadingImage(false)
+      }
+      reader.readAsDataURL(file)
+    } catch (error) {
+      console.error('Error uploading image:', error)
+      alert('Failed to upload image')
+      setUploadingImage(false)
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -534,23 +579,73 @@ export default function AddProductPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
+                    {/* Upload from Computer */}
+                    <div className="border-2 border-dashed border-[#355E3B]/30 rounded-lg p-4 hover:border-[#D4AF37] transition-colors">
+                      <input
+                        type="file"
+                        id="imageUpload"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        className="hidden"
+                        disabled={uploadingImage}
+                      />
+                      <label
+                        htmlFor="imageUpload"
+                        className="flex flex-col items-center justify-center cursor-pointer"
+                      >
+                        <Upload className="w-8 h-8 text-[#355E3B] mb-2" />
+                        <span className="text-sm font-medium text-[#355E3B]">
+                          {uploadingImage ? 'Uploading...' : 'Upload from Computer'}
+                        </span>
+                        <span className="text-xs text-gray-500 mt-1">
+                          PNG, JPG, WEBP (Max 5MB)
+                        </span>
+                      </label>
+                    </div>
+
+                    <div className="relative">
+                      <div className="absolute inset-0 flex items-center">
+                        <span className="w-full border-t border-gray-300" />
+                      </div>
+                      <div className="relative flex justify-center text-xs uppercase">
+                        <span className="bg-white px-2 text-gray-500">Or add URL</span>
+                      </div>
+                    </div>
+
+                    {/* Image URLs */}
                     {form.images.map((image, index) => (
-                      <div key={index} className="flex gap-2">
-                        <Input
-                          value={image}
-                          onChange={(e) => handleArrayChange("images", index, e.target.value)}
-                          placeholder="Image URL"
-                          className="border-[#355E3B]/20 focus:border-[#D4AF37]"
-                        />
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="icon"
-                          onClick={() => removeArrayItem("images", index)}
-                          disabled={form.images.length === 1}
-                        >
-                          <Minus className="w-4 h-4" />
-                        </Button>
+                      <div key={index} className="space-y-2">
+                        <div className="flex gap-2">
+                          <Input
+                            value={image}
+                            onChange={(e) => handleArrayChange("images", index, e.target.value)}
+                            placeholder="Image URL or uploaded image"
+                            className="border-[#355E3B]/20 focus:border-[#D4AF37]"
+                            readOnly={image.startsWith('data:image')}
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            onClick={() => removeArrayItem("images", index)}
+                            disabled={form.images.length === 1}
+                          >
+                            <Minus className="w-4 h-4" />
+                          </Button>
+                        </div>
+                        {/* Preview */}
+                        {image && (
+                          <div className="relative w-full h-32 bg-gray-100 rounded-lg overflow-hidden border border-gray-200">
+                            <img
+                              src={image}
+                              alt={`Preview ${index + 1}`}
+                              className="w-full h-full object-contain"
+                              onError={(e) => {
+                                e.currentTarget.src = '/placeholder.svg?height=100&width=100'
+                              }}
+                            />
+                          </div>
+                        )}
                       </div>
                     ))}
                     <Button
@@ -560,7 +655,7 @@ export default function AddProductPage() {
                       className="w-full border-[#355E3B] text-[#355E3B] bg-transparent"
                     >
                       <Plus className="w-4 h-4 mr-2" />
-                      Add Image
+                      Add Image URL
                     </Button>
                   </div>
                 </CardContent>

@@ -5,7 +5,7 @@ import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
-  title: 'Sign In | Luxury Dry Fruits',
+  title: 'Sign In | Origiganics by Wallian',
   description: 'Sign in to your account to access premium dry fruits and nuts',
 }
 
