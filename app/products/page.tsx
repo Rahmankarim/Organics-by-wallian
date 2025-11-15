@@ -15,10 +15,12 @@ import Image from "next/image"
 import Link from "next/link"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
+import WishlistButton from '@/components/wishlist-button'
 import { useSearchParams } from "next/navigation"
 
 interface Product {
-  id: number
+  _id?: string  // MongoDB ObjectId
+  id: number    // Legacy numeric id for backward compatibility
   name: string
   price: number
   originalPrice: number
@@ -43,10 +45,10 @@ const categories = [
 ]
 
 const priceRanges = [
-  { id: "0-500", name: "Under ₹500", min: 0, max: 500 },
-  { id: "500-1000", name: "₹500 - ₹1000", min: 500, max: 1000 },
-  { id: "1000-1500", name: "₹1000 - ₹1500", min: 1000, max: 1500 },
-  { id: "1500+", name: "Above ₹1500", min: 1500, max: Number.POSITIVE_INFINITY },
+  { id: "0-500", name: "Under Rs. 500", min: 0, max: 500 },
+  { id: "500-1000", name: "Rs. 500 - Rs. 1000", min: 500, max: 1000 },
+  { id: "1000-1500", name: "Rs. 1000 - Rs. 1500", min: 1000, max: 1500 },
+  { id: "1500+", name: "Above Rs. 1500", min: 1500, max: Number.POSITIVE_INFINITY },
 ]
 
 export default function ProductsPage() {
@@ -154,7 +156,7 @@ export default function ProductsPage() {
     }
   }
 
-  const handleAddToCart = async (productId: number) => {
+  const handleAddToCart = async (productId: number) => { // Revert to number - API handles conversion
     try {
       const response = await fetch("/api/cart", {
         method: "POST",
@@ -162,7 +164,7 @@ export default function ProductsPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          productId: productId,
+          productId: productId, // API will handle both numeric and ObjectId
           quantity: 1,
         }),
       })
@@ -240,7 +242,7 @@ export default function ProductsPage() {
       <div>
         <h3 className="font-semibold text-[#355E3B] mb-3">Availability</h3>
         <div className="flex items-center space-x-2">
-          <Checkbox id="in-stock" checked={showInStockOnly} onCheckedChange={setShowInStockOnly} />
+          <Checkbox id="in-stock" checked={showInStockOnly} onCheckedChange={(checked) => setShowInStockOnly(checked === true)} />
           <Label htmlFor="in-stock" className="text-[#6F4E37] cursor-pointer">
             In Stock Only
           </Label>
@@ -282,7 +284,7 @@ export default function ProductsPage() {
             <h1 className="text-4xl md:text-5xl font-serif font-bold mb-4">Premium Organic Collection</h1>
             <p className="text-xl text-gray-200 max-w-2xl mx-auto">
               Discover our carefully curated selection of the finest organic dry fruits, sourced directly from premium
-              orchards across India.
+              orchards across Pakistan.
             </p>
           </motion.div>
         </div>
@@ -384,13 +386,11 @@ export default function ProductsPage() {
                           className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-300"
                         />
                         <Badge className="absolute top-3 left-3 bg-[#D4AF37] text-[#355E3B]">{product.badge}</Badge>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="absolute top-3 right-3 bg-white/80 hover:bg-white text-[#355E3B]"
-                        >
-                          <Heart className="w-4 h-4" />
-                        </Button>
+                        {/* Wishlist button */}
+                        <div className="absolute top-3 right-3">
+                          {/* @ts-ignore server component -> client import handled in client bundle */}
+                          <WishlistButton productId={product.id ? String(product.id) : String(product._id)} className="bg-white/80 hover:bg-white" />
+                        </div>
                         {!product.inStock && (
                           <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
                             <Badge variant="destructive">Out of Stock</Badge>
@@ -417,8 +417,8 @@ export default function ProductsPage() {
 
                         <div className="flex items-center justify-between mb-4">
                           <div className="flex items-center gap-2">
-                            <span className="text-xl font-bold text-[#355E3B]">₹{product.price}</span>
-                            <span className="text-sm text-gray-500 line-through">₹{product.originalPrice}</span>
+                            <span className="text-xl font-bold text-[#355E3B]">Rs. {product.price}</span>
+                            <span className="text-sm text-gray-500 line-through">Rs. {product.originalPrice}</span>
                           </div>
                         </div>
 
@@ -426,7 +426,7 @@ export default function ProductsPage() {
                           <Button
                             className="flex-1 bg-[#355E3B] hover:bg-[#2A4A2F] text-white text-sm"
                             disabled={!product.inStock}
-                            onClick={() => handleAddToCart(product.id)}
+                            onClick={() => handleAddToCart(product.id)} // Revert to numeric id
                           >
                             <ShoppingCart className="w-4 h-4 mr-2" />
                             Add to Cart
@@ -481,15 +481,15 @@ export default function ProductsPage() {
 
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
-                              <span className="text-2xl font-bold text-[#355E3B]">₹{product.price}</span>
-                              <span className="text-sm text-gray-500 line-through">₹{product.originalPrice}</span>
+                              <span className="text-2xl font-bold text-[#355E3B]">Rs. {product.price}</span>
+                              <span className="text-sm text-gray-500 line-through">Rs. {product.originalPrice}</span>
                             </div>
 
                             <div className="flex gap-2">
                               <Button
                                 className="bg-[#355E3B] hover:bg-[#2A4A2F] text-white px-6"
                                 disabled={!product.inStock}
-                                onClick={() => handleAddToCart(product.id)}
+                                onClick={() => handleAddToCart(product.id)} // Revert to numeric id
                               >
                                 <ShoppingCart className="w-4 h-4 mr-2" />
                                 Add to Cart

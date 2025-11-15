@@ -1,8 +1,8 @@
 import { Resend } from 'resend'
 import nodemailer from 'nodemailer'
 
-// Initialize Resend
-const resend = new Resend(process.env.RESEND_API_KEY)
+// Initialize Resend only when API key is set
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null
 
 interface EmailConfig {
   host: string
@@ -49,9 +49,12 @@ const createTransporter = () => {
 // Send verification code email (6-digit code)
 export const sendVerificationCodeEmail = async (email: string, code: string): Promise<boolean> => {
   try {
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+    const verificationUrl = `${baseUrl}/verify?email=${encodeURIComponent(email)}&code=${code}`
+    
     // Try Resend first
-    if (process.env.RESEND_API_KEY) {
-      const { error } = await resend.emails.send({
+    if (resend) {
+      const resp = await resend.emails.send({
         from: process.env.FROM_EMAIL || 'onboarding@resend.dev',
         to: email,
         subject: 'Your Verification Code - Origiganics by Wallian',
@@ -66,6 +69,14 @@ export const sendVerificationCodeEmail = async (email: string, code: string): Pr
               <p style="font-size: 1.2em;">Please use the following code to verify your email address:</p>
               <div style="font-size: 2em; font-weight: bold; color: #D4AF37; margin: 20px 0; letter-spacing: 4px; text-align: center; padding: 20px; background: #f8f9fa; border: 2px dashed #D4AF37; border-radius: 8px;">${code}</div>
               <p style="color: #888;">This code will expire in 10 minutes.</p>
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="${verificationUrl}" style="background-color: #355E3B; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                  Verify Now
+                </a>
+              </div>
+              <p style="color: #666; font-size: 14px;">
+                Or copy and paste this link: <a href="${verificationUrl}" style="color: #355E3B;">${verificationUrl}</a>
+              </p>
               <p style="color: #666; font-size: 0.9em; margin-top: 20px;">If you didn't request this code, please ignore this email.</p>
             </div>
             <div style="background-color: #f8f9fa; padding: 15px; text-align: center; color: #666; font-size: 0.8em;">
@@ -75,13 +86,13 @@ export const sendVerificationCodeEmail = async (email: string, code: string): Pr
         `
       })
 
-      if (error) {
-        console.error('Resend error:', error)
-        return false
+      if (resp && (resp as any).error) {
+        console.error('Resend error:', (resp as any).error)
+        // fallthrough to SMTP fallback
+      } else {
+        console.log('Verification code email sent successfully via Resend to:', email)
+        return true
       }
-
-      console.log('Verification code email sent successfully via Resend to:', email)
-      return true
     }
 
     // Fallback to nodemailer if Resend is not configured
@@ -106,6 +117,14 @@ export const sendVerificationCodeEmail = async (email: string, code: string): Pr
             <p style="font-size: 1.2em;">Please use the following code to verify your email address:</p>
             <div style="font-size: 2em; font-weight: bold; color: #D4AF37; margin: 20px 0; letter-spacing: 4px; text-align: center; padding: 20px; background: #f8f9fa; border: 2px dashed #D4AF37; border-radius: 8px;">${code}</div>
             <p style="color: #888;">This code will expire in 10 minutes.</p>
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${verificationUrl}" style="background-color: #355E3B; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                Verify Now
+              </a>
+            </div>
+            <p style="color: #666; font-size: 14px;">
+              Or copy and paste this link: <a href="${verificationUrl}" style="color: #355E3B;">${verificationUrl}</a>
+            </p>
           </div>
         </div>
       `
@@ -121,40 +140,7 @@ export const sendVerificationCodeEmail = async (email: string, code: string): Pr
   }
 }
 
-interface EmailConfig {
-  host: string
-  port: number
-  secure: boolean
-  auth: {
-    user: string
-    pass: string
-  }
-}
-
-// Email configuration
-const getEmailConfig = (): EmailConfig => {
-  return {
-    host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-    port: parseInt(process.env.EMAIL_PORT || '587'),
-    secure: false, // true for 465, false for other ports
-    auth: {
-      user: process.env.EMAIL_USER || '',
-      pass: process.env.EMAIL_PASSWORD || ''
-    }
-  }
-}
-
-// Create transporter
-const createTransporter = () => {
-  const config = getEmailConfig()
-  
-  if (!config.auth.user || !config.auth.pass) {
-    console.warn('Email credentials not configured. Emails will not be sent.')
-    return null
-  }
-
-  return nodemailer.createTransport(config)
-}
+// (getEmailConfig and createTransporter are defined earlier; avoid duplicate declarations)
 
 // Send verification email
 export const sendVerificationEmail = async (email: string, token: string): Promise<boolean> => {
@@ -166,7 +152,7 @@ export const sendVerificationEmail = async (email: string, token: string): Promi
       return false
     }
 
-    const verificationUrl = `${process.env.NEXT_PUBLIC_APP_URL}/verify-email?token=${token}&email=${email}`
+    const verificationUrl = `${process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXT_PUBLIC_APP_URL}/verify?email=${encodeURIComponent(email)}&code=${token}`
     
     const mailOptions = {
       from: `"Origiganic by Wallian" <${process.env.EMAIL_USER}>`,
@@ -317,7 +303,7 @@ export const sendWelcomeEmail = async (email: string, firstName: string): Promis
             <ul style="color: #666;">
               <li>Browse our premium collection of organic dry fruits</li>
               <li>Create your wishlist of favorite products</li>
-              <li>Enjoy free shipping on orders over ₹500</li>
+              <li>Enjoy free shipping on orders over Rs. 500</li>
               <li>Subscribe to our newsletter for health tips and exclusive offers</li>
             </ul>
             

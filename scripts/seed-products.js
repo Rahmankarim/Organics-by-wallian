@@ -1,4 +1,4 @@
-import clientPromise from "../lib/mongodb";
+import dbConnect, { Product } from "../lib/mongoose.js";
 
 const sampleProducts = [
   {
@@ -245,7 +245,7 @@ async function seedProducts() {
     console.log(`✅ Successfully inserted ${result.insertedCount} products`);
     console.log("Sample products:");
     sampleProducts.forEach((product) => {
-      console.log(`- ${product.name} (₹${product.price})`);
+      console.log(`- ${product.name} (Rs. ${product.price})`);
     });
   } catch (error) {
     console.error("❌ Error seeding products:", error);

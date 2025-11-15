@@ -15,20 +15,20 @@ export async function POST(request: NextRequest) {
   try {
     const { email } = await request.json()
     if (!email) {
-      return NextResponse.json({ error: 'Email is required' }, { status: 400 })
+      return NextResponse.json({ success: false, message: 'Email is required' }, { status: 400 })
     }
     
     await dbConnect()
     
     const pendingUser = await PendingUser.findOne({ email: email.toLowerCase() })
     if (!pendingUser) {
-      return NextResponse.json({ error: 'No pending signup found. Please sign up again.' }, { status: 400 })
+      return NextResponse.json({ success: false, message: 'No pending signup found. Please sign up again.' }, { status: 400 })
     }
     
     // Check if the pending user entry has expired
     if (pendingUser.verificationCodeExpires < new Date()) {
       await PendingUser.deleteOne({ email: email.toLowerCase() })
-      return NextResponse.json({ error: 'Signup expired. Please sign up again.' }, { status: 400 })
+      return NextResponse.json({ success: false, message: 'Signup expired. Please sign up again.' }, { status: 400 })
     }
     
     // Generate new code and expiry
@@ -45,8 +45,8 @@ export async function POST(request: NextRequest) {
     const { sendVerificationCodeEmail } = await import('@/lib/email')
     await sendVerificationCodeEmail(email.toLowerCase(), code)
     
-    return NextResponse.json({ message: 'Verification code resent.' }, { status: 200 })
+    return NextResponse.json({ success: true, message: 'Verification code resent.' }, { status: 200 })
   } catch (error) {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return NextResponse.json({ success: false, message: 'Internal server error' }, { status: 500 })
   }
 }

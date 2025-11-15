@@ -249,8 +249,8 @@ export default function AdminProductsPage() {
                         </TableCell>
                         <TableCell>
                           <div>
-                            <p className="font-semibold text-[#355E3B]">₹{product.price}</p>
-                            <p className="text-sm text-gray-500 line-through">₹{product.originalPrice}</p>
+                            <p className="font-semibold text-[#355E3B]">Rs. {product.price}</p>
+                            <p className="text-sm text-gray-500 line-through">Rs. {product.originalPrice}</p>
                           </div>
                         </TableCell>
                         <TableCell>

@@ -1,8 +1,5 @@
 import { Metadata } from 'next'
-import AuthForm from '@/components/auth-form'
-import { Button } from '@/components/ui/button'
-import { ArrowLeft } from 'lucide-react'
-import Link from 'next/link'
+import { redirect } from 'next/navigation'
 
 export const metadata: Metadata = {
   title: 'Sign Up | Origiganics by Wallian',
@@ -10,32 +7,6 @@ export const metadata: Metadata = {
 }
 
 export default function RegisterPage() {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 to-amber-50 p-4">
-      <div className="w-full max-w-md">
-        {/* Home Button */}
-        <div className="mb-6 flex justify-between items-center">
-          <Button variant="ghost" asChild className="text-gray-700 hover:bg-gray-100">
-            <Link href="/" className="flex items-center gap-2">
-              <ArrowLeft className="w-4 h-4" />
-              Back to Home
-            </Link>
-          </Button>
-          <Button asChild className="bg-[#355E3B] hover:bg-[#355E3B]/90 text-white">
-            <Link href="/" className="flex items-center gap-2">
-              🏠 Home
-            </Link>
-          </Button>
-        </div>
-        
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Join Us</h1>
-          <p className="text-gray-600 mt-2">
-            Create your account to start shopping premium dry fruits
-          </p>
-        </div>
-        <AuthForm defaultTab="signup" />
-      </div>
-    </div>
-  )
+  // Redirect to the new signup page
+  redirect('/signup')
 }

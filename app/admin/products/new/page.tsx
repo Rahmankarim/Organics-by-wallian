@@ -276,7 +276,7 @@ export default function AddProductPage() {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                       <Label htmlFor="price" className="text-[#355E3B] font-medium">
-                        Price (₹) *
+                        Price (Rs.) *
                       </Label>
                       <Input
                         id="price"
@@ -289,7 +289,7 @@ export default function AddProductPage() {
                     </div>
                     <div>
                       <Label htmlFor="originalPrice" className="text-[#355E3B] font-medium">
-                        Original Price (₹) *
+                        Original Price (Rs.) *
                       </Label>
                       <Input
                         id="originalPrice"

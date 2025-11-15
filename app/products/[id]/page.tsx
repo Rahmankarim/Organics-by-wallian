@@ -14,7 +14,8 @@ import { Footer } from "@/components/footer"
 import { useParams, useRouter } from "next/navigation"
 
 interface Product {
-  id: number
+  _id?: string  // MongoDB ObjectId
+  id: number    // Legacy numeric id for backward compatibility
   name: string
   price: number
   originalPrice: number
@@ -121,7 +122,7 @@ export default function ProductDetailPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          productId: product.id,
+          productId: product.id, // Use numeric id - API will handle conversion
           quantity: quantity,
         }),
       })
@@ -272,8 +273,8 @@ export default function ProductDetailPage() {
               <h1 className="text-3xl md:text-4xl font-serif font-bold text-[#355E3B] mb-4">{product.name}</h1>
 
               <div className="flex items-center gap-4 mb-6">
-                <span className="text-3xl font-bold text-[#355E3B]">₹{product.price}</span>
-                <span className="text-xl text-gray-500 line-through">₹{product.originalPrice}</span>
+                <span className="text-3xl font-bold text-[#355E3B]">Rs. {product.price}</span>
+                <span className="text-xl text-gray-500 line-through">Rs. {product.originalPrice}</span>
                 <Badge className="bg-green-100 text-green-800">
                   {Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}% OFF
                 </Badge>
@@ -327,7 +328,7 @@ export default function ProductDetailPage() {
                       <Plus className="w-4 h-4" />
                     </Button>
                   </div>
-                  <span className="text-[#6F4E37]">Total: ₹{product.price * quantity}</span>
+                  <span className="text-[#6F4E37]">Total: Rs. {product.price * quantity}</span>
                 </div>
               )}
 
@@ -521,8 +522,8 @@ export default function ProductDetailPage() {
 
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-2">
-                        <span className="font-bold text-[#355E3B]">₹{relatedProduct.price}</span>
-                        <span className="text-sm text-gray-500 line-through">₹{relatedProduct.originalPrice}</span>
+                        <span className="font-bold text-[#355E3B]">Rs. {relatedProduct.price}</span>
+                        <span className="text-sm text-gray-500 line-through">Rs. {relatedProduct.originalPrice}</span>
                       </div>
                     </div>
 

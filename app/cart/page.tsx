@@ -88,7 +88,7 @@ export default function CartPage() {
 
   const handleUpdateQuantity = async (productId: number, newQuantity: number, variantId?: string) => {
     try {
-      await updateQuantity(productId, newQuantity, variantId)
+      await updateQuantity(productId.toString(), newQuantity, variantId)
       
       // Reload cart data
       const response = await fetch('/api/cart', { credentials: 'include' })
@@ -104,7 +104,7 @@ export default function CartPage() {
 
   const handleRemoveItem = async (productId: number, variantId?: string) => {
     try {
-      await removeItem(productId, variantId)
+      await removeItem(productId.toString(), variantId)
       
       // Reload cart data
       const response = await fetch('/api/cart', { credentials: 'include' })
@@ -292,10 +292,10 @@ export default function CartPage() {
                         
                         <div className="text-right">
                           <p className="font-semibold text-[#355E3B]">
-                            ₹{(item.price * item.quantity).toLocaleString()}
+                            Rs. {(item.price * item.quantity).toLocaleString()}
                           </p>
                           <p className="text-sm text-gray-500">
-                            ₹{item.price} each
+                            Rs. {item.price} each
                           </p>
                         </div>
                       </div>
@@ -352,13 +352,13 @@ export default function CartPage() {
                   <>
                     <div className="flex justify-between">
                       <span>Subtotal ({cartSummary?.totalItems} items)</span>
-                      <span>₹{finalCalculations.subtotal.toLocaleString()}</span>
+                      <span>Rs. {finalCalculations.subtotal.toLocaleString()}</span>
                     </div>
                     
                     {discount > 0 && (
                       <div className="flex justify-between text-green-600">
                         <span>Discount ({discount}%)</span>
-                        <span>-₹{finalCalculations.discountAmount.toLocaleString()}</span>
+                        <span>-Rs. {finalCalculations.discountAmount.toLocaleString()}</span>
                       </div>
                     )}
                     
@@ -368,21 +368,21 @@ export default function CartPage() {
                         {finalCalculations.shipping === 0 ? (
                           <span className="text-green-600">FREE</span>
                         ) : (
-                          `₹${finalCalculations.shipping}`
+                          `Rs. ${finalCalculations.shipping}`
                         )}
                       </span>
                     </div>
                     
                     <div className="flex justify-between">
                       <span>Tax (18% GST)</span>
-                      <span>₹{finalCalculations.tax.toLocaleString()}</span>
+                      <span>Rs. {finalCalculations.tax.toLocaleString()}</span>
                     </div>
                     
                     <Separator />
                     
                     <div className="flex justify-between text-lg font-semibold">
                       <span>Total</span>
-                      <span className="text-[#355E3B]">₹{finalCalculations.total.toLocaleString()}</span>
+                      <span className="text-[#355E3B]">Rs. {finalCalculations.total.toLocaleString()}</span>
                     </div>
                   </>
                 )}
@@ -397,7 +397,7 @@ export default function CartPage() {
                 <div className="space-y-2 text-sm text-gray-600">
                   <div className="flex items-center gap-2">
                     <Truck className="h-4 w-4 text-blue-600" />
-                    <span>Free delivery on orders above ₹999</span>
+                    <span>                    <span>Free delivery on orders above Rs. 999</span></span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Shield className="h-4 w-4 text-green-600" />

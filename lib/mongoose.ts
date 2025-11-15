@@ -167,7 +167,7 @@ const UserPreferencesSchema = new mongoose.Schema<UserPreferences>({
   newsletter: { type: Boolean, default: true },
   smsNotifications: { type: Boolean, default: false },
   language: { type: String, default: 'en' },
-  currency: { type: String, default: 'INR' },
+  currency: { type: String, default: 'PKR' },
   dietaryRestrictions: [{ type: String }]
 })
 
@@ -210,7 +210,7 @@ const PendingUserSchema = new mongoose.Schema<IPendingUser>({
 
 const CartItemSchema = new mongoose.Schema<ICartItem>({
   userId: { type: String, required: true },
-  productId: { type: Number, required: true },
+  productId: { type: String, required: true }, // Changed from Number to String to store ObjectId
   variantId: { type: String },
   quantity: { type: Number, required: true, min: 1 },
   price: { type: Number, required: true },
@@ -220,7 +220,7 @@ const CartItemSchema = new mongoose.Schema<ICartItem>({
 CartItemSchema.index({ userId: 1 })
 
 const OrderItemSchema = new mongoose.Schema<OrderItem>({
-  productId: { type: Number, required: true },
+  productId: { type: String, required: true }, // Changed from Number to String to store ObjectId
   variantId: { type: String },
   name: { type: String, required: true },
   price: { type: Number, required: true },
@@ -283,7 +283,7 @@ const CouponSchema = new mongoose.Schema<ICoupon>({
 
 const ReviewSchema = new mongoose.Schema<IReview>({
   userId: { type: String, required: true },
-  productId: { type: Number, required: true },
+  productId: { type: String, required: true }, // Changed from Number to String to store ObjectId
   rating: { type: Number, required: true, min: 1, max: 5 },
   title: { type: String, required: true },
   content: { type: String, required: true },
@@ -300,7 +300,7 @@ ReviewSchema.index({ userId: 1 })
 const WishlistSchema = new mongoose.Schema<IWishlist>({
   userId: { type: String, required: true, unique: true },
   products: [{
-    productId: { type: Number, required: true },
+    productId: { type: String, required: true }, // Changed from Number to String to store ObjectId
     addedAt: { type: Date, default: Date.now }
   }]
 }, {

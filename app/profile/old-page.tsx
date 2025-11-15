@@ -153,7 +153,7 @@ export default function ProfilePage() {
                   {profileData.totalOrders} Orders
                 </span>
                 <span className="flex items-center gap-1">
-                  <CreditCard className="w-4 h-4" />₹{profileData.totalSpent.toLocaleString()} Spent
+                  <CreditCard className="w-4 h-4" />Rs. {profileData.totalSpent.toLocaleString()} Spent
                 </span>
                 <Badge className="bg-[#D4AF37] text-[#355E3B]">{profileData.loyaltyPoints} Points</Badge>
               </div>
@@ -283,7 +283,7 @@ export default function ProfilePage() {
                   <Card className="p-4 bg-[#F4EBD0]">
                     <div className="text-center">
                       <CreditCard className="w-8 h-8 text-[#355E3B] mx-auto mb-2" />
-                      <p className="text-2xl font-bold text-[#355E3B]">₹{profileData.totalSpent.toLocaleString()}</p>
+                      <p className="text-2xl font-bold text-[#355E3B]">Rs. {profileData.totalSpent.toLocaleString()}</p>
                       <p className="text-sm text-[#6F4E37]">Total Spent</p>
                     </div>
                   </Card>
@@ -326,7 +326,7 @@ export default function ProfilePage() {
                       <div className="flex justify-between items-center">
                         <p className="text-[#6F4E37]">{order.items} items</p>
                         <div className="flex items-center gap-4">
-                          <span className="font-bold text-[#355E3B]">₹{order.total}</span>
+                          <span className="font-bold text-[#355E3B]">Rs. {order.total}</span>
                           <Button
                             variant="outline"
                             size="sm"
@@ -402,8 +402,8 @@ export default function ProfilePage() {
                       <div className="flex-1">
                         <h3 className="font-semibold text-[#355E3B] mb-1">{item.name}</h3>
                         <div className="flex items-center gap-2 mb-2">
-                          <span className="font-bold text-[#355E3B]">₹{item.price}</span>
-                          <span className="text-sm text-gray-500 line-through">₹{item.originalPrice}</span>
+                          <span className="font-bold text-[#355E3B]">Rs. {item.price}</span>
+                          <span className="text-sm text-gray-500 line-through">Rs. {item.originalPrice}</span>
                         </div>
                         <div className="flex items-center gap-2">
                           <Button

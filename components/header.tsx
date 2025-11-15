@@ -12,7 +12,7 @@ import { Search, ShoppingCart, Heart, User, Menu, Leaf, ChevronDown, Phone, Mail
 import { TokenStorage } from "@/lib/cookies"
 import Link from "next/link"
 import Image from "next/image"
-import { useAuthStore } from "@/lib/store"
+import { useAuthStore, useWishlistStore } from "@/lib/store"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
@@ -67,10 +67,13 @@ const categories = [
 export function Header() {
   const router = useRouter()
   const { user, isAuthenticated, logout } = useAuthStore()
+  const { items: wishlistItems, loadWishlist } = useWishlistStore()
   const [isScrolled, setIsScrolled] = useState(false)
   const [cartCount, setCartCount] = useState(0)
-  const [wishlistCount, setWishlistCount] = useState(5)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
+
+  // Get wishlist count from store
+  const wishlistCount = wishlistItems.length
 
   useEffect(() => {
     const handleScroll = () => {
@@ -124,6 +127,13 @@ export function Header() {
     return () => window.removeEventListener("cartUpdated", handleCartUpdate)
   }, [isAuthenticated])
 
+  useEffect(() => {
+    // Load wishlist count for authenticated users
+    if (isAuthenticated) {
+      loadWishlist()
+    }
+  }, [isAuthenticated, loadWishlist])
+
   const handleLogout = async () => {
     try {
       await fetch('/api/auth/logout', { method: 'POST' })
@@ -169,7 +179,7 @@ export function Header() {
               <span className="text-xs font-medium">100% Organic</span>
             </div>
             <Badge className="bg-[#D4AF37] text-[#355E3B] hover:bg-[#B8941F] transition-colors px-3 py-1 rounded-full">
-              Free shipping on orders above ₹999
+              Free shipping on orders above Rs. 999
             </Badge>
           </motion.div>
         </div>

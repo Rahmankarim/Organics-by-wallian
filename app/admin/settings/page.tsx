@@ -17,12 +17,12 @@ export default function AdminSettingsPage() {
     siteName: "Origiganics by Wallian",
     siteDescription: "Premium organic dry fruits and nuts",
     contactEmail: "admin@organicorchard.com",
-    contactPhone: "+91 98765 43210",
+    contactPhone: "+92 300 1234567",
     
     // Business Settings
-    businessAddress: "123 Organic Street, Natural City, India",
-    gstNumber: "GST123456789",
-    panNumber: "PAN123456789",
+    businessAddress: "123 Organic Street, Karachi, Pakistan",
+    gstNumber: "NTN123456789",
+    panNumber: "STN123456789",
     
     // Notification Settings
     emailNotifications: true,

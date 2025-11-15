@@ -19,6 +19,15 @@ const nextConfig = {
   compiler: {
     removeConsole: process.env.NODE_ENV === "production",
   },
+  async redirects() {
+    return [
+      {
+        source: "/verify-email",
+        destination: "/verify",
+        permanent: true,
+      },
+    ];
+  },
   async headers() {
     return [
       {

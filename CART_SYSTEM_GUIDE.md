@@ -113,7 +113,7 @@ npm run dev
 **Features:**
 
 - Comprehensive shipping address form
-- Indian state selection
+- Pakistani province selection
 - Payment method selection (Razorpay/COD)
 - Form validation
 - Razorpay integration
