@@ -7,8 +7,7 @@ export default function LoginRedirectPage() {
   const router = useRouter()
 
   useEffect(() => {
-    // Redirect to the signin page to avoid conflicts
-    router.replace('/signin')
+    router.replace("/signin")
   }, [router])
 
   return (

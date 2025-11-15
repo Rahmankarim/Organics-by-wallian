@@ -31,7 +31,7 @@ export function Footer() {
                 <Leaf className="w-6 h-6 text-[#355E3B]" />
               </div>
               <div>
-                <h3 className="text-xl font-serif font-bold">Organic by Wallian</h3>
+                <h3 className="text-xl font-serif font-bold">Origiganics by Wallian</h3>
                 <p className="text-sm text-gray-300">Premium Organic Products</p>
               </div>
             </div>
@@ -161,7 +161,7 @@ export function Footer() {
       <div className="container mx-auto px-4 py-6">
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="text-center md:text-left">
-            <p className="text-gray-300 text-sm">© 2024 Organic by Wallian. All rights reserved. | Made with ❤️ by Indeset Pvt Ltd</p>
+            <p className="text-gray-300 text-sm">© 2024 Origiganics by Wallian. All rights reserved. | Made with ❤️ by Indeset Pvt Ltd</p>
           </div>
 
           <div className="flex items-center gap-4">

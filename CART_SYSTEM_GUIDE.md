@@ -22,16 +22,16 @@ Your luxury dry fruits e-commerce website now has a complete cart and payment sy
 
 ### 1. Install Dependencies
 
-```bash
+\`\`\`bash
 cd "c:\Users\PMLS\Downloads\luxury-dry-fruits-ecommerce (1)"
 npm install
-```
+\`\`\`
 
 ### 2. Environment Setup
 
 Copy `.env.example` to `.env.local` and update:
 
-```bash
+\`\`\`bash
 # Database
 MONGODB_URI=mongodb://localhost:27017/luxury-dry-fruits
 
@@ -43,23 +43,23 @@ JWT_EXPIRES_IN=7d
 RAZORPAY_KEY_ID=rzp_test_your-razorpay-key-id
 RAZORPAY_KEY_SECRET=your-razorpay-key-secret
 NEXT_PUBLIC_RAZORPAY_KEY_ID=rzp_test_your-razorpay-key-id
-```
+\`\`\`
 
 ### 3. Setup Database
 
-```bash
+\`\`\`bash
 # Start MongoDB (if local)
 mongod
 
 # Seed sample products
 node scripts/seed-products.js
-```
+\`\`\`
 
 ### 4. Run Development Server
 
-```bash
+\`\`\`bash
 npm run dev
-```
+\`\`\`
 
 ---
 
@@ -128,11 +128,11 @@ npm run dev
 1. **Sign up** at [razorpay.com](https://razorpay.com)
 2. **Get API keys** from dashboard
 3. **Update environment variables**:
-   ```
+   \`\`\`
    RAZORPAY_KEY_ID=rzp_test_xxxxxxxxxxxx
    RAZORPAY_KEY_SECRET=xxxxxxxxxxxxxxxxxxxxxxxx
    NEXT_PUBLIC_RAZORPAY_KEY_ID=rzp_test_xxxxxxxxxxxx
-   ```
+   \`\`\`
 
 ### Payment Flow
 
@@ -208,7 +208,7 @@ npm run dev
 
 ### 1. User Flow Testing
 
-```bash
+\`\`\`bash
 # 1. Register/Login a user
 # 2. Browse products at /products
 # 3. Add items to cart with variants
@@ -216,7 +216,7 @@ npm run dev
 # 5. Proceed to checkout at /checkout
 # 6. Complete payment process
 # 7. View order at /orders/[id]
-```
+\`\`\`
 
 ### 2. Cart Operations
 
@@ -264,7 +264,7 @@ npm run dev
 
 ### Debug Commands
 
-```bash
+\`\`\`bash
 # Check MongoDB connection
 mongosh "mongodb://localhost:27017/luxury-dry-fruits"
 
@@ -276,7 +276,7 @@ db.carts.find()
 
 # View orders
 db.orders.find().sort({createdAt: -1}).limit(5)
-```
+\`\`\`
 
 ---
 

@@ -84,7 +84,7 @@ export default function AboutPage() {
             </Badge>
             <h1 className="text-4xl md:text-6xl font-serif font-bold mb-6">From Nature's Heart to Your Home</h1>
             <p className="text-xl md:text-2xl text-gray-200 mb-8 leading-relaxed">
-              Founded with a passion for organic living, Organics by Walian brings you the finest selection of premium
+              Founded with a passion for organic living, Origiganics by Wallian brings you the finest selection of premium
               organic productss, sourced directly from certified organic farms across Pakistan.
             </p>
             <Button
@@ -135,7 +135,7 @@ export default function AboutPage() {
               </h2>
               <div className="space-y-4 text-[#6F4E37] leading-relaxed">
                 <p>
-                What started as a small family business in the breathtaking valleys of Hunza has grown into Pakistan’s most trusted premium organic dry fruits brand under Organics by Walian. Our founder, Reyan Ali, grew up in a family of organic farmers in Hunza and witnessed firsthand the positive impact of sustainable farming on the environment and community.
+                What started as a small family business in the breathtaking valleys of Hunza has grown into Pakistan's most trusted premium organic dry fruits brand under Origiganics by Wallian. Our founder, Reyan Ali, grew up in a family of organic farmers in Hunza and witnessed firsthand the positive impact of sustainable farming on the environment and community.
                 </p>
                 <p>
                  Frustrated by the scarcity of truly organic, high-quality dry fruits in the local and international markets, he decided to bridge the gap between conscious consumers and authentic organic farmers of Hunza. Today, we work directly with over 200 certified organic farmers across the Hunza region and northern Pakistan.
@@ -222,7 +222,7 @@ export default function AboutPage() {
           >
             <h2 className="text-3xl md:text-4xl font-serif font-bold text-[#355E3B] mb-4">Meet Our Team</h2>
             <p className="text-xl text-[#6F4E37] max-w-2xl mx-auto">
-              The passionate people behind Organics by Walian's success.
+              The passionate people behind Origiganics by Wallian's success.
             </p>
           </motion.div>
 

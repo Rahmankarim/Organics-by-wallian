@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { User, PendingUser } from '@/lib/mongoose'
-import dbConnect from '@/lib/mongoose'
-import { rateLimit } from '@/lib/auth'
-import bcrypt from 'bcryptjs'
+import { type NextRequest, NextResponse } from "next/server"
+import { User, PendingUser } from "@/lib/mongoose"
+import dbConnect from "@/lib/mongoose"
+import { rateLimit } from "@/lib/auth"
+import bcrypt from "bcryptjs"
 
 // Rate limiting: 5 verification attempts per 5 minutes
 const verifyRateLimit = rateLimit(5, 5 * 60 * 1000)
@@ -13,98 +13,106 @@ export async function POST(request: NextRequest) {
 
   try {
     const { email, code } = await request.json()
-    // Unconditional logging for debugging on Vercel
-    console.log('[VERIFY] Incoming payload:', { email, code })
-    if (process.env.AUTH_DEBUG) {
-      console.log('[AUTH_DEBUG][verify] Payload received', { email, codeLength: code?.length })
-    }
     if (!email || !code) {
-      return NextResponse.json({ success: false, message: 'Email and code are required' }, { status: 400 })
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Email and code are required",
+        },
+        { status: 400 },
+      )
     }
 
     await dbConnect()
-    if (process.env.AUTH_DEBUG) {
-      console.log('[AUTH_DEBUG][verify] Start verification for', email, 'ENV:', {
-        hasMongo: !!process.env.MONGODB_URI,
-        nodeEnv: process.env.NODE_ENV
-      })
-    }
 
-    const normalizedEmail = email.toLowerCase().trim()
-
-    // Find the pending user explicitly
-    const pendingUser = await PendingUser.findOne({ email: normalizedEmail })
-    // Unconditional logging for pending user search result
-    console.log('[VERIFY] PendingUser found:', !!pendingUser, 'for email:', normalizedEmail)
+    // Find the pending user
+    const pendingUser = await PendingUser.findOne({ email: email.toLowerCase() })
     if (!pendingUser) {
-      console.warn('Pending user not found during verification:', normalizedEmail)
-      if (process.env.AUTH_DEBUG) {
-        const count = await PendingUser.countDocuments({})
-        console.log('[AUTH_DEBUG][verify] Pending user not found. Collection size:', count)
-      }
-      return NextResponse.json({ success: false, message: 'Pending user not found' }, { status: 404 })
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Invalid or expired code",
+        },
+        { status: 400 },
+      )
     }
 
     // Check if code has expired
-    const now = new Date()
-    if (pendingUser.verificationCodeExpires < now) {
-      console.info('Verification code expired for:', normalizedEmail)
-      await PendingUser.deleteOne({ email: normalizedEmail })
-      return NextResponse.json({ success: false, message: 'Verification code expired. Please sign up again.' }, { status: 410 })
+    if (pendingUser.verificationCodeExpires < new Date()) {
+      await PendingUser.deleteOne({ email: email.toLowerCase() })
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Invalid or expired code",
+        },
+        { status: 400 },
+      )
     }
 
     // Verify the code
     const isValidCode = await bcrypt.compare(code, pendingUser.verificationCode)
     if (!isValidCode) {
-      console.warn('Invalid code attempt for:', normalizedEmail)
-      return NextResponse.json({ success: false, message: 'Invalid verification code' }, { status: 400 })
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Invalid or expired code",
+        },
+        { status: 400 },
+      )
     }
 
     // Check if user already exists (safety check)
-    const existingUser = await User.findOne({ email: normalizedEmail })
+    const existingUser = await User.findOne({ email: email.toLowerCase() })
     if (existingUser) {
-      await PendingUser.deleteOne({ email: normalizedEmail })
-      return NextResponse.json({ success: false, message: 'User already exists' }, { status: 409 })
+      await PendingUser.deleteOne({ email: email.toLowerCase() })
+      return NextResponse.json(
+        {
+          success: false,
+          message: "User already exists",
+        },
+        { status: 409 },
+      )
     }
 
-    // Create the permanent user
     const newUser = new User({
-      email: normalizedEmail,
+      email: pendingUser.email,
       firstName: pendingUser.firstName,
       lastName: pendingUser.lastName,
       phone: pendingUser.phone,
       password: pendingUser.password, // Already hashed
-      role: 'customer',
+      role: "customer",
       isEmailVerified: true,
       addresses: [],
       preferences: {
         newsletter: true,
         smsNotifications: false,
-        language: 'en',
-        currency: 'INR',
-        dietaryRestrictions: []
+        language: "en",
+        currency: "INR",
+        dietaryRestrictions: [],
       },
-      twoFactorEnabled: false
+      twoFactorEnabled: false,
     })
-    
-    await newUser.save()
-    if (process.env.AUTH_DEBUG) {
-      console.log('[AUTH_DEBUG][verify] User created', { email: normalizedEmail, userId: newUser._id.toString() })
-    }
-    
-    // Delete the pending user
-  await PendingUser.deleteOne({ email: normalizedEmail })
 
-    if (process.env.AUTH_DEBUG) {
-      console.log('[AUTH_DEBUG][verify] Cleanup complete for pending user', { email: normalizedEmail })
-    }
-    
-    return NextResponse.json({ 
-      success: true,
-      message: 'Your account has been created successfully. You can now sign in!' 
-    }, { status: 201 })
+    await newUser.save()
+
+    // Delete the pending user
+    await PendingUser.deleteOne({ email: email.toLowerCase() })
+
+    return NextResponse.json(
+      {
+        success: true,
+        message: "Account created successfully. You can now log in.",
+      },
+      { status: 200 },
+    )
   } catch (error) {
-    console.error('Verification error:', error)
-    return NextResponse.json({ success: false, message: 'Internal server error' }, { status: 500 })
+    console.error("Verification error:", error)
+    return NextResponse.json(
+      {
+        success: false,
+        message: "Internal server error",
+      },
+      { status: 500 },
+    )
   }
 }

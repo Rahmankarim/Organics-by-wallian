@@ -1,8 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { User } from '@/lib/mongoose'
-import dbConnect from '@/lib/mongoose'
-import { rateLimit, generateToken } from '@/lib/auth'
-import bcrypt from 'bcryptjs'
+import { type NextRequest, NextResponse } from "next/server"
+import { User } from "@/lib/mongoose"
+import dbConnect from "@/lib/mongoose"
+import { rateLimit } from "@/lib/auth"
+import bcrypt from "bcryptjs"
+import jwt from "jsonwebtoken"
 
 // Rate limiting: 5 login attempts per 15 minutes
 const loginRateLimit = rateLimit(5, 15 * 60 * 1000)
@@ -13,31 +14,50 @@ export async function POST(request: NextRequest) {
 
   try {
     const { email, password } = await request.json()
-    
+
     if (!email || !password) {
-      return NextResponse.json({ success: false, message: 'Email and password are required' }, { status: 400 })
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Email and password are required",
+        },
+        { status: 400 },
+      )
     }
 
     await dbConnect()
 
-    // Find user in the permanent User collection only
     const user = await User.findOne({ email: email.toLowerCase() })
     if (!user || !user.password) {
-      return NextResponse.json({ success: false, message: 'Invalid email or password' }, { status: 401 })
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Invalid email or password",
+        },
+        { status: 401 },
+      )
     }
 
-    // Check if email is verified
     if (!user.isEmailVerified) {
-      return NextResponse.json({ 
-        success: false, 
-        message: 'Please verify your email before logging in' 
-      }, { status: 401 })
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Please verify your email before logging in",
+        },
+        { status: 401 },
+      )
     }
 
     // Verify password
     const isValidPassword = await bcrypt.compare(password, user.password)
     if (!isValidPassword) {
-      return NextResponse.json({ success: false, message: 'Invalid email or password' }, { status: 401 })
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Invalid email or password",
+        },
+        { status: 401 },
+      )
     }
 
     // Update last login
@@ -45,38 +65,50 @@ export async function POST(request: NextRequest) {
     await user.save()
 
     // Generate JWT token
-    const token = generateToken({ 
-      userId: user._id.toString(), 
-      email: user.email, 
-      role: user.role 
-    })
-
-    // Create response with token as httpOnly cookie
-    const response = NextResponse.json({ 
-      success: true,
-      message: 'Login successful',
-      token: token, // Include token in response for client-side storage
-      user: {
-        id: user._id,
+    const token = jwt.sign(
+      {
+        userId: user._id,
         email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        role: user.role
-      }
-    }, { status: 200 })
+        role: user.role,
+      },
+      process.env.JWT_SECRET || "fallback-secret",
+      { expiresIn: process.env.JWT_EXPIRES_IN || "7d" },
+    )
 
-    // Set JWT as httpOnly cookie (for server-side requests)
-    response.cookies.set('auth-token', token, {
+    const response = NextResponse.json(
+      {
+        success: true,
+        message: "Login successful",
+        data: {
+          user: {
+            id: user._id,
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            role: user.role,
+          },
+        },
+      },
+      { status: 200 },
+    )
+
+    // Set JWT as httpOnly cookie
+    response.cookies.set("token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     })
 
     return response
-
   } catch (error) {
-    console.error('Login error:', error)
-    return NextResponse.json({ success: false, message: 'Internal server error' }, { status: 500 })
+    console.error("Login error:", error)
+    return NextResponse.json(
+      {
+        success: false,
+        message: "Internal server error",
+      },
+      { status: 500 },
+    )
   }
 }

@@ -17,12 +17,51 @@ import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
 const categories = [
-  { name: "Almonds", href: "/products?category=almonds", image: "/Features/almond.jpg?height=100&width=100" },
-  { name: "Pistachios", href: "/products?category=pistachios", image:"/Features/Pistachios.jpg?height=100&width=100" },
-  { name: "Dates", href: "/products?category=dates", image: "/Features/dates.jpg?height=100&width=100" },
-  { name: "Walnuts", href: "/products?category=walnuts", image: "/Features/walnut.jpg?height=100&width=100" },
-  { name: "Cashews", href: "/products?category=cashews", image: "/Features/Cashews.jpg?height=100&width=100" },
-  { name: "Gift Boxes", href: "/products?category=gifts", image:"/Features/gift.jpg?height=100&width=100" },
+  { 
+    name: "Dry Fruits & Nuts", 
+    href: "/products?category=dry-fruits-nuts", 
+    image: "https://images.unsplash.com/photo-1599599810769-bcde5a160d32?w=400&h=300&fit=crop" 
+  },
+  { 
+    name: "Grains & Pulses", 
+    href: "/products?category=grains-pulses", 
+    image: "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=400&h=300&fit=crop" 
+  },
+  { 
+    name: "Spices & Herbs", 
+    href: "/products?category=spices-herbs", 
+    image: "https://images.unsplash.com/photo-1506368249639-73a05d6f6488?w=400&h=300&fit=crop" 
+  },
+  { 
+    name: "Honey & Natural Sweeteners", 
+    href: "/products?category=honey-sweeteners", 
+    image: "https://images.unsplash.com/photo-1558642452-9d2a7deb7f62?w=400&h=300&fit=crop" 
+  },
+  { 
+    name: "Oils & Ghee", 
+    href: "/products?category=oils-ghee", 
+    image: "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400&h=300&fit=crop" 
+  },
+  { 
+    name: "Herbal Products", 
+    href: "/products?category=herbal-products", 
+    image: "https://images.unsplash.com/photo-1512069772995-ec65ed45afd6?w=400&h=300&fit=crop" 
+  },
+  { 
+    name: "Fresh Produce", 
+    href: "/products?category=fresh-produce", 
+    image: "https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=400&h=300&fit=crop" 
+  },
+  { 
+    name: "Organic Snacks", 
+    href: "/products?category=organic-snacks", 
+    image: "https://images.unsplash.com/photo-1621939514649-280e2ee25f60?w=400&h=300&fit=crop" 
+  },
+  { 
+    name: "Beverages", 
+    href: "/products?category=beverages", 
+    image: "https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=400&h=300&fit=crop" 
+  },
 ]
 
 export function Header() {
@@ -175,9 +214,9 @@ export function Header() {
                 </div>
                 <div className="hidden sm:block">
                   <h1 className="text-2xl font-bold bg-gradient-to-r from-[#355E3B] to-[#2A4A2F] bg-clip-text text-transparent">
-                    OrganicsBy
+                    Origiganics
                   </h1>
-                  <p className="text-xs text-[#6F4E37] font-medium tracking-wide">WALLIAN</p>
+                  <p className="text-xs text-[#6F4E37] font-medium tracking-wide">BY WALLIAN</p>
                 </div>
               </Link>
             </motion.div>
@@ -197,24 +236,24 @@ export function Header() {
                       <ChevronDown className="w-4 h-4 ml-1 transition-transform duration-200" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-80 p-4 bg-white/95 backdrop-blur-md border-0 shadow-2xl rounded-2xl">
-                    <div className="grid grid-cols-2 gap-3">
+                  <DropdownMenuContent className="w-[800px] p-6 bg-white/95 backdrop-blur-md border-0 shadow-2xl rounded-2xl">
+                    <div className="grid grid-cols-5 gap-4">
                       {categories.map((category) => (
                         <Link
                           key={category.name}
                           href={category.href}
                           className="flex flex-col items-center p-3 rounded-xl hover:bg-[#F4EBD0] transition-all duration-300 group"
                         >
-                          <div className="relative mb-2 overflow-hidden rounded-lg">
+                          <div className="relative mb-2 overflow-hidden rounded-lg w-20 h-20">
                             <Image
                               src={category.image || "/placeholder.svg"}
                               alt={category.name}
-                              width={60}
-                              height={60}
-                              className="rounded-lg group-hover:scale-110 transition-transform duration-300"
+                              width={80}
+                              height={80}
+                              className="rounded-lg object-cover w-full h-full group-hover:scale-110 transition-transform duration-300"
                             />
                           </div>
-                          <span className="text-sm font-medium text-[#355E3B] group-hover:text-[#D4AF37] transition-colors">
+                          <span className="text-xs font-medium text-[#355E3B] group-hover:text-[#D4AF37] transition-colors text-center">
                             {category.name}
                           </span>
                         </Link>

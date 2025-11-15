@@ -9,15 +9,20 @@ import { motion } from "framer-motion"
 
 // Store location coordinates (Karimabad, Hunza, Gilgit-Baltistan, Pakistan)
 const STORE_LOCATION = {
-  lat: 36.3235833, // 36°19'24.9"N
-  lng: 74.6600556, // 74°39'36.2"E
-  address: "Mohallah garabrass karimabad hunza Gilgit-Baltistan Pakistan",
-  name: "Organic Orchard Store",
-  phone: "+92 318 0441303",
-  hours: "Mon-Sat: 9 AM - 7 PM",
-  rating: 4.8,
-  reviews: 127,
-  specialties: ["Premium Almonds", "Fresh Dates", "Organic Walnuts", "Cashews"]
+  lat: 36.3169,
+  lng: 74.66,
+  name: "Origiganics by Wallian",
+  address: "Main Market, Karimabad, Hunza, Gilgit-Baltistan, Pakistan",
+  phone: "+92 300 1234567",
+  hours: "9:00 AM - 9:00 PM (Daily)",
+  rating: "4.8",
+  reviews: "127",
+  specialties: [
+    "Organic Dry Fruits",
+    "Fresh Hunza Apricots",
+    "Natural Honey",
+    "Traditional Grains"
+  ]
 }
 
 interface FastMapProps {

@@ -18,7 +18,7 @@ Your luxury dry fruits ecommerce site already has a **production-ready authentic
 
 ### **1. Password Security**
 
-```typescript
+\`\`\`typescript
 // Password hashing with bcrypt (12 salt rounds)
 export const hashPassword = async (password: string): Promise<string> => {
   const salt = await bcrypt.genSalt(12); // Higher salt rounds for better security
@@ -35,7 +35,7 @@ export const validatePassword = (password: string): boolean => {
 
   return minLength && hasLower && hasUpper && hasNumber && hasSpecial;
 };
-```
+\`\`\`
 
 ### **2. JWT vs Sessions - Why JWT was chosen:**
 
@@ -48,7 +48,7 @@ export const validatePassword = (password: string): boolean => {
 
 **HttpOnly Cookie Storage:**
 
-```typescript
+\`\`\`typescript
 // Secure cookie implementation
 response.cookies.set("auth-token", token, {
   httpOnly: true, // Prevents XSS attacks
@@ -57,18 +57,18 @@ response.cookies.set("auth-token", token, {
   maxAge: rememberMe ? 30 * 24 * 60 * 60 : 24 * 60 * 60, // 30 days or 1 day
   path: "/", // Available for all routes
 });
-```
+\`\`\`
 
 ### **3. Rate Limiting Protection**
 
-```typescript
+\`\`\`typescript
 // API rate limiting (prevents brute force attacks)
 const rateLimitResult = rateLimit(10, 15 * 60 * 1000)(request); // 10 attempts per 15 minutes
-```
+\`\`\`
 
 ### **4. Input Validation & Sanitization**
 
-```typescript
+\`\`\`typescript
 // Email validation
 export const validateEmail = (email: string): boolean => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -83,16 +83,16 @@ export const sanitizeInput = (input: string): string => {
     .replace(/on\w+=/gi, "") // Remove event handlers
     .trim();
 };
-```
+\`\`\`
 
 ### **5. Environment Security**
 
-```env
+\`\`\`env
 # Required environment variables
 JWT_SECRET=your-super-secure-random-string-here
 MONGODB_URI=mongodb://localhost:27017/luxury-dry-fruits
 NODE_ENV=production
-```
+\`\`\`
 
 ---
 
@@ -108,7 +108,7 @@ NODE_ENV=production
 - ✅ Email verification (production mode)
 - ✅ Rate limiting
 
-```typescript
+\`\`\`typescript
 // Key validation logic
 if (!validatePassword(password)) {
   return NextResponse.json(
@@ -128,7 +128,7 @@ if (existingUser) {
     { status: 409 }
   );
 }
-```
+\`\`\`
 
 ### **Sign In Endpoint** (`/api/auth/signin`)
 
@@ -140,7 +140,7 @@ if (existingUser) {
 - ✅ Rate limiting
 - ✅ Email verification check
 
-```typescript
+\`\`\`typescript
 // Password verification
 const isPasswordValid = await verifyPassword(password, user.password!);
 
@@ -153,7 +153,7 @@ const token = generateToken(
   },
   tokenExpiry
 );
-```
+\`\`\`
 
 ### **Route Protection Middleware**
 
@@ -164,7 +164,7 @@ const token = generateToken(
 - ✅ Redirect to login with return URL
 - ✅ Admin route protection
 
-```typescript
+\`\`\`typescript
 // Protected routes configuration
 const protectedRoutes = [
   "/profile",
@@ -183,7 +183,7 @@ if (isProtectedRoute) {
     return NextResponse.redirect(loginUrl);
   }
 }
-```
+\`\`\`
 
 ---
 
@@ -199,7 +199,7 @@ if (isProtectedRoute) {
 - ✅ Error handling
 - ✅ Success notifications
 
-```tsx
+\`\`\`tsx
 // Form validation example
 const handleSignin = async (e: React.FormEvent) => {
   e.preventDefault();
@@ -221,7 +221,7 @@ const handleSignin = async (e: React.FormEvent) => {
     return;
   }
 };
-```
+\`\`\`
 
 ### **State Management** (Zustand with Persistence)
 
@@ -232,7 +232,7 @@ const handleSignin = async (e: React.FormEvent) => {
 - ✅ Secure token storage
 - ✅ State rehydration
 
-```typescript
+\`\`\`typescript
 // Auth store with persistence
 export const useAuthStore = create<AuthStore>()(
   persist(
@@ -260,7 +260,7 @@ export const useAuthStore = create<AuthStore>()(
     }
   )
 );
-```
+\`\`\`
 
 ---
 
@@ -300,7 +300,7 @@ export const useAuthStore = create<AuthStore>()(
 
 ### **1. Test User Registration**
 
-```bash
+\`\`\`bash
 curl -X POST http://localhost:3001/api/auth/signup \
   -H "Content-Type: application/json" \
   -d '{
@@ -310,11 +310,11 @@ curl -X POST http://localhost:3001/api/auth/signup \
     "password": "SecurePass123!",
     "phone": "+1234567890"
   }'
-```
+\`\`\`
 
 ### **2. Test User Login**
 
-```bash
+\`\`\`bash
 curl -X POST http://localhost:3001/api/auth/signin \
   -H "Content-Type: application/json" \
   -d '{
@@ -322,7 +322,7 @@ curl -X POST http://localhost:3001/api/auth/signin \
     "password": "SecurePass123!",
     "rememberMe": true
   }'
-```
+\`\`\`
 
 ### **3. Test Protected Route Access**
 
@@ -334,7 +334,7 @@ Visit: `http://localhost:3001/profile` (should redirect to login if not authenti
 
 ### **Environment Variables**
 
-```env
+\`\`\`env
 # CRITICAL: Change these for production
 JWT_SECRET=your-super-secure-random-256-bit-string
 MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/dbname
@@ -342,11 +342,11 @@ MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/dbname
 # Security settings
 NODE_ENV=production
 NEXTAUTH_URL=https://yourdomain.com
-```
+\`\`\`
 
 ### **Security Headers** (Add to `next.config.js`)
 
-```javascript
+\`\`\`javascript
 const securityHeaders = [
   {
     key: "X-Frame-Options",
@@ -361,7 +361,7 @@ const securityHeaders = [
     value: "origin-when-cross-origin",
   },
 ];
-```
+\`\`\`
 
 ### **SSL/HTTPS**
 
@@ -375,7 +375,7 @@ const securityHeaders = [
 
 ### **Frontend Usage**
 
-```tsx
+\`\`\`tsx
 import { useAuthStore } from "@/lib/store";
 
 function Dashboard() {
@@ -392,11 +392,11 @@ function Dashboard() {
     </div>
   );
 }
-```
+\`\`\`
 
 ### **Route Protection**
 
-```tsx
+\`\`\`tsx
 import { ProtectedRoute } from "@/components/protected-route";
 
 function ProfilePage() {
@@ -406,7 +406,7 @@ function ProfilePage() {
     </ProtectedRoute>
   );
 }
-```
+\`\`\`
 
 ---
 

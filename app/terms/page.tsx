@@ -19,7 +19,7 @@ export default function TermsOfService() {
           </CardHeader>
           <CardContent>
             <p className="text-gray-600">
-              By accessing and using the Luxury Dry Fruits website, you accept and agree to be bound 
+              By accessing and using the Origiganic by Wallian website, you accept and agree to be bound 
               by the terms and provision of this agreement. If you do not agree to abide by the above, 
               please do not use this service.
             </p>
@@ -32,7 +32,7 @@ export default function TermsOfService() {
           </CardHeader>
           <CardContent>
             <p className="text-gray-600">
-              Luxury Dry Fruits provides an online platform for purchasing premium quality dry fruits, 
+              Origiganic by Wallian provides an online platform for purchasing premium quality dry fruits, 
               nuts, and related products. We reserve the right to modify, suspend, or discontinue the 
               service at any time without notice.
             </p>
@@ -175,7 +175,7 @@ export default function TermsOfService() {
           <CardContent>
             <p className="text-gray-600">
               All content on this website, including text, graphics, logos, images, and software, is 
-              the property of Luxury Dry Fruits or its licensors and is protected by copyright and 
+              the property of Origiganic by Wallian or its licensors and is protected by copyright and 
               other intellectual property laws. You may not reproduce, distribute, or create derivative 
               works without our express written permission.
             </p>
@@ -198,7 +198,7 @@ export default function TermsOfService() {
             <div>
               <h4 className="font-semibold mb-2">Limitation of Liability</h4>
               <p className="text-gray-600">
-                In no event shall Luxury Dry Fruits be liable for any indirect, incidental, special, 
+                In no event shall Origiganic by Wallian be liable for any indirect, incidental, special, 
                 consequential, or punitive damages arising from your use of the website or products.
               </p>
             </div>
@@ -211,7 +211,7 @@ export default function TermsOfService() {
           </CardHeader>
           <CardContent>
             <p className="text-gray-600">
-              You agree to defend, indemnify, and hold harmless Luxury Dry Fruits and its affiliates 
+              You agree to defend, indemnify, and hold harmless Origiganic by Wallian and its affiliates 
               from and against any claims, damages, costs, and expenses arising from your violation 
               of these terms or your use of the website.
             </p>

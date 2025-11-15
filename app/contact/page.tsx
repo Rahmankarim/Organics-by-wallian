@@ -25,13 +25,13 @@ const contactInfo = [
   {
     icon: Mail,
     title: "Email Us",
-    details: ["helloorganicorchard@gmail.com", "supportorganicorchard@gmail.com"],
+    details: ["OrigiganicsByWallian@gmail.com", "support@origiganicsbywallian.com"],
     description: "We'll respond within 24 hours",
   },
   {
     icon: MapPin,
     title: "Visit Us",
-    details: ["Mohallah garabrass karimabad hunza Glgit-Baltitan Pakistan"],
+    details: ["Mohallah garabrass karimabad hunza Gilgit-Baltistan Pakistan"],
     description: "Mon-Fri, 10 AM - 6 PM",
   },
   {

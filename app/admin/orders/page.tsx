@@ -11,30 +11,56 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
-import { Package, Search, Eye, Edit, MoreHorizontal, DollarSign, ShoppingCart, TrendingUp } from "lucide-react"
-import Link from "next/link"
+import { Package, Search, Eye, Edit, MoreHorizontal, DollarSign, ShoppingCart, TrendingUp, Truck, CheckCircle, AlertCircle, Clock } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
+
+interface OrderItem {
+  productId: number
+  name: string
+  price: number
+  quantity: number
+  image: string
+  variantId?: string
+  sku?: string
+}
+
+interface Address {
+  type: 'home' | 'office' | 'other'
+  firstName: string
+  lastName: string
+  company?: string
+  address: string
+  apartment?: string
+  city: string
+  state: string
+  zipCode: string
+  country: string
+  phone: string
+  isDefault: boolean
+}
 
 interface Order {
   _id: string
-  id: string
+  orderNumber: string
   userId: string
-  items: Array<{
-    productId: number
-    name: string
-    price: number
-    quantity: number
-    image: string
-  }>
+  items: OrderItem[]
+  subtotal: number
+  tax: number
+  shippingCost: number
+  discount: number
   total: number
   status: string
-  deliveryAddress: {
-    name: string
-    address: string
-    phone: string
-  }
+  paymentStatus: string
   paymentMethod: string
+  paymentIntentId?: string
+  shippingAddress: Address
+  billingAddress?: Address
   trackingNumber?: string
+  shippingProvider?: string
+  estimatedDelivery?: string
+  notes?: string
   createdAt: string
+  updatedAt: string
 }
 
 interface OrdersResponse {
@@ -56,6 +82,7 @@ interface OrdersResponse {
 }
 
 export default function AdminOrdersPage() {
+  const { toast } = useToast()
   const [ordersData, setOrdersData] = useState<OrdersResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
@@ -65,6 +92,8 @@ export default function AdminOrdersPage() {
   const [showOrderDialog, setShowOrderDialog] = useState(false)
   const [updateStatus, setUpdateStatus] = useState("")
   const [trackingNumber, setTrackingNumber] = useState("")
+  const [shippingProvider, setShippingProvider] = useState("")
+  const [updating, setUpdating] = useState(false)
 
   useEffect(() => {
     fetchOrders()
@@ -85,9 +114,20 @@ export default function AdminOrdersPage() {
 
       if (response.ok) {
         setOrdersData(data)
+      } else {
+        toast({
+          title: "Error",
+          description: data.error || "Failed to fetch orders",
+          variant: "destructive",
+        })
       }
     } catch (error) {
       console.error("Error fetching orders:", error)
+      toast({
+        title: "Error",
+        description: "Failed to fetch orders",
+        variant: "destructive",
+      })
     } finally {
       setLoading(false)
     }
@@ -97,45 +137,69 @@ export default function AdminOrdersPage() {
     if (!selectedOrder) return
 
     try {
-      const response = await fetch(`/api/admin/orders/${selectedOrder.id}`, {
+      setUpdating(true)
+      const response = await fetch(`/api/admin/orders/${selectedOrder.orderNumber}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
           status: updateStatus,
-          trackingNumber: trackingNumber,
+          trackingNumber: trackingNumber || undefined,
+          shippingProvider: shippingProvider || undefined,
         }),
       })
 
       if (response.ok) {
+        toast({
+          title: "Success",
+          description: "Order updated successfully!",
+        })
         setShowOrderDialog(false)
         setSelectedOrder(null)
         setUpdateStatus("")
         setTrackingNumber("")
+        setShippingProvider("")
         fetchOrders()
-        alert("Order updated successfully!")
       } else {
-        alert("Failed to update order")
+        const data = await response.json()
+        toast({
+          title: "Error",
+          description: data.error || "Failed to update order",
+          variant: "destructive",
+        })
       }
     } catch (error) {
       console.error("Error updating order:", error)
-      alert("Error updating order")
+      toast({
+        title: "Error",
+        description: "Failed to update order",
+        variant: "destructive",
+      })
+    } finally {
+      setUpdating(false)
     }
   }
 
   const getStatusColor = (status: string) => {
-    switch (status) {
-      case "Delivered":
-        return "bg-green-100 text-green-800"
-      case "Shipped":
-        return "bg-blue-100 text-blue-800"
-      case "Processing":
-        return "bg-yellow-100 text-yellow-800"
-      case "Pending":
-        return "bg-gray-100 text-gray-800"
+    const lowerStatus = status.toLowerCase()
+    switch (lowerStatus) {
+      case "delivered":
+        return "bg-green-100 text-green-800 hover:bg-green-100"
+      case "shipped":
+        return "bg-blue-100 text-blue-800 hover:bg-blue-100"
+      case "processing":
+        return "bg-yellow-100 text-yellow-800 hover:bg-yellow-100"
+      case "confirmed":
+        return "bg-cyan-100 text-cyan-800 hover:bg-cyan-100"
+      case "pending":
+        return "bg-gray-100 text-gray-800 hover:bg-gray-100"
+      case "cancelled":
+        return "bg-red-100 text-red-800 hover:bg-red-100"
+      case "refunded":
+        return "bg-purple-100 text-purple-800 hover:bg-purple-100"
       default:
-        return "bg-gray-100 text-gray-800"
+        return "bg-gray-100 text-gray-800 hover:bg-gray-100"
     }
   }
 
@@ -162,7 +226,7 @@ export default function AdminOrdersPage() {
         },
         {
           title: "Total Revenue",
-          value: `Rs. ${ordersData.stats.totalRevenue.toLocaleString()}`,
+          value: `₹${ordersData.stats.totalRevenue.toLocaleString()}`,
           icon: DollarSign,
           color: "text-green-600",
         },
@@ -264,7 +328,7 @@ export default function AdminOrdersPage() {
               <div className="flex justify-center py-8">
                 <div className="w-8 h-8 border-4 border-[#355E3B] border-t-transparent rounded-full animate-spin"></div>
               </div>
-            ) : (
+            ) : ordersData?.orders && ordersData.orders.length > 0 ? (
               <>
                 <Table>
                   <TableHeader>
@@ -274,33 +338,42 @@ export default function AdminOrdersPage() {
                       <TableHead>Items</TableHead>
                       <TableHead>Total</TableHead>
                       <TableHead>Status</TableHead>
+                      <TableHead>Payment</TableHead>
                       <TableHead>Date</TableHead>
                       <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {ordersData?.orders.map((order) => (
-                      <TableRow key={order.id}>
+                      <TableRow key={order.orderNumber}>
                         <TableCell>
-                          <p className="font-medium text-[#355E3B]">{order.id}</p>
+                          <p className="font-medium text-[#355E3B]">{order.orderNumber}</p>
                         </TableCell>
                         <TableCell>
                           <div>
-                            <p className="font-medium">{order.deliveryAddress.name}</p>
-                            <p className="text-sm text-[#6F4E37]">{order.deliveryAddress.phone}</p>
+                            <p className="font-medium">{order.shippingAddress.firstName} {order.shippingAddress.lastName}</p>
+                            <p className="text-sm text-[#6F4E37]">{order.shippingAddress.phone}</p>
                           </div>
                         </TableCell>
                         <TableCell>
                           <p className="text-sm">{order.items.length} items</p>
                         </TableCell>
                         <TableCell>
-                          <p className="font-semibold text-[#355E3B]">Rs. {order.total.toLocaleString()}</p>
+                          <p className="font-semibold text-[#355E3B]">₹{order.total.toLocaleString()}</p>
                         </TableCell>
                         <TableCell>
-                          <Badge className={getStatusColor(order.status)}>{order.status}</Badge>
+                          <Badge className={getStatusColor(order.status)}>
+                            {order.status.charAt(0).toUpperCase() + order.status.slice(1).toLowerCase()}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge className={order.paymentStatus === 'succeeded' ? 'bg-green-100 text-green-800 hover:bg-green-100' : 'bg-yellow-100 text-yellow-800 hover:bg-yellow-100'}>
+                            {order.paymentStatus.charAt(0).toUpperCase() + order.paymentStatus.slice(1)}
+                          </Badge>
                         </TableCell>
                         <TableCell>
                           <p className="text-sm">{new Date(order.createdAt).toLocaleDateString()}</p>
+                          <p className="text-xs text-[#6F4E37]">{new Date(order.createdAt).toLocaleTimeString()}</p>
                         </TableCell>
                         <TableCell>
                           <DropdownMenu>
@@ -315,6 +388,7 @@ export default function AdminOrdersPage() {
                                   setSelectedOrder(order)
                                   setUpdateStatus(order.status)
                                   setTrackingNumber(order.trackingNumber || "")
+                                  setShippingProvider(order.shippingProvider || "")
                                   setShowOrderDialog(true)
                                 }}
                               >
@@ -326,6 +400,7 @@ export default function AdminOrdersPage() {
                                   setSelectedOrder(order)
                                   setUpdateStatus(order.status)
                                   setTrackingNumber(order.trackingNumber || "")
+                                  setShippingProvider(order.shippingProvider || "")
                                   setShowOrderDialog(true)
                                 }}
                               >
@@ -363,16 +438,26 @@ export default function AdminOrdersPage() {
                   </div>
                 )}
               </>
+            ) : (
+              <div className="text-center py-12">
+                <Package className="w-16 h-16 mx-auto text-gray-300 mb-4" />
+                <h3 className="text-lg font-semibold text-[#355E3B] mb-2">No Orders Found</h3>
+                <p className="text-[#6F4E37]">
+                  {searchTerm || statusFilter !== "all" 
+                    ? "Try adjusting your filters to see more results" 
+                    : "Orders will appear here once customers start placing them"}
+                </p>
+              </div>
             )}
           </CardContent>
         </Card>
       </div>
 
       <Dialog open={showOrderDialog} onOpenChange={setShowOrderDialog}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-[#355E3B]">
-              Order Details - {selectedOrder?.id}
+              Order Details - {selectedOrder?.orderNumber}
             </DialogTitle>
             <DialogDescription>View and update order information</DialogDescription>
           </DialogHeader>
@@ -381,72 +466,159 @@ export default function AdminOrdersPage() {
             <div className="space-y-6">
               {/* Customer Info */}
               <div>
-                <h3 className="font-semibold text-[#355E3B] mb-2">Customer Information</h3>
-                <div className="bg-[#F4EBD0] p-4 rounded-lg">
-                  <p className="font-medium">{selectedOrder.deliveryAddress.name}</p>
-                  <p className="text-sm text-[#6F4E37]">{selectedOrder.deliveryAddress.address}</p>
-                  <p className="text-sm text-[#6F4E37]">{selectedOrder.deliveryAddress.phone}</p>
+                <h3 className="font-semibold text-[#355E3B] mb-2 flex items-center gap-2">
+                  <Package className="w-4 h-4" />
+                  Customer Information
+                </h3>
+                <div className="bg-[#F4EBD0] p-4 rounded-lg space-y-2">
+                  <p className="font-medium">{selectedOrder.shippingAddress.firstName} {selectedOrder.shippingAddress.lastName}</p>
+                  <p className="text-sm text-[#6F4E37]">{selectedOrder.shippingAddress.address}</p>
+                  {selectedOrder.shippingAddress.apartment && (
+                    <p className="text-sm text-[#6F4E37]">{selectedOrder.shippingAddress.apartment}</p>
+                  )}
+                  <p className="text-sm text-[#6F4E37]">
+                    {selectedOrder.shippingAddress.city}, {selectedOrder.shippingAddress.state} {selectedOrder.shippingAddress.zipCode}
+                  </p>
+                  <p className="text-sm text-[#6F4E37]">{selectedOrder.shippingAddress.country}</p>
+                  <p className="text-sm text-[#6F4E37] font-medium">{selectedOrder.shippingAddress.phone}</p>
+                </div>
+              </div>
+
+              {/* Payment Info */}
+              <div>
+                <h3 className="font-semibold text-[#355E3B] mb-2 flex items-center gap-2">
+                  <DollarSign className="w-4 h-4" />
+                  Payment Information
+                </h3>
+                <div className="bg-gray-50 p-4 rounded-lg space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-sm text-[#6F4E37]">Payment Method:</span>
+                    <span className="font-medium">{selectedOrder.paymentMethod}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-[#6F4E37]">Payment Status:</span>
+                    <Badge className={selectedOrder.paymentStatus === 'succeeded' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}>
+                      {selectedOrder.paymentStatus}
+                    </Badge>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-[#6F4E37]">Subtotal:</span>
+                    <span>₹{selectedOrder.subtotal.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-[#6F4E37]">Tax:</span>
+                    <span>₹{selectedOrder.tax.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-[#6F4E37]">Shipping:</span>
+                    <span>₹{selectedOrder.shippingCost.toLocaleString()}</span>
+                  </div>
+                  {selectedOrder.discount > 0 && (
+                    <div className="flex justify-between text-green-600">
+                      <span className="text-sm">Discount:</span>
+                      <span>-₹{selectedOrder.discount.toLocaleString()}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between pt-2 border-t font-bold">
+                    <span>Total:</span>
+                    <span className="text-[#355E3B]">₹{selectedOrder.total.toLocaleString()}</span>
+                  </div>
                 </div>
               </div>
 
               {/* Order Items */}
               <div>
-                <h3 className="font-semibold text-[#355E3B] mb-2">Order Items</h3>
+                <h3 className="font-semibold text-[#355E3B] mb-2 flex items-center gap-2">
+                  <ShoppingCart className="w-4 h-4" />
+                  Order Items
+                </h3>
                 <div className="space-y-2">
                   {selectedOrder.items.map((item, index) => (
                     <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                      <div>
-                        <p className="font-medium">{item.name}</p>
-                        <p className="text-sm text-[#6F4E37]">Qty: {item.quantity}</p>
+                      <div className="flex gap-3 items-center">
+                        <img src={item.image} alt={item.name} className="w-12 h-12 object-cover rounded" />
+                        <div>
+                          <p className="font-medium">{item.name}</p>
+                          <p className="text-sm text-[#6F4E37]">Qty: {item.quantity} × ₹{item.price.toLocaleString()}</p>
+                        </div>
                       </div>
-                      <p className="font-semibold">Rs. {(item.price * item.quantity).toLocaleString()}</p>
+                      <p className="font-semibold">₹{(item.price * item.quantity).toLocaleString()}</p>
                     </div>
                   ))}
-                </div>
-                <div className="flex justify-between items-center pt-3 border-t">
-                  <span className="font-semibold">Total:</span>
-                  <span className="font-bold text-lg text-[#355E3B]">Rs. {selectedOrder.total.toLocaleString()}</span>
                 </div>
               </div>
 
               {/* Update Status */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="status" className="text-[#355E3B] font-medium">
-                    Order Status
-                  </Label>
-                  <Select value={updateStatus} onValueChange={setUpdateStatus}>
-                    <SelectTrigger className="border-[#355E3B]/20 focus:border-[#D4AF37]">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Pending">Pending</SelectItem>
-                      <SelectItem value="Processing">Processing</SelectItem>
-                      <SelectItem value="Shipped">Shipped</SelectItem>
-                      <SelectItem value="Delivered">Delivered</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="tracking" className="text-[#355E3B] font-medium">
-                    Tracking Number
-                  </Label>
-                  <Input
-                    id="tracking"
-                    value={trackingNumber}
-                    onChange={(e) => setTrackingNumber(e.target.value)}
-                    placeholder="Enter tracking number"
-                    className="border-[#355E3B]/20 focus:border-[#D4AF37]"
-                  />
+              <div className="space-y-4">
+                <h3 className="font-semibold text-[#355E3B] flex items-center gap-2">
+                  <Truck className="w-4 h-4" />
+                  Update Order Status
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <Label htmlFor="status" className="text-[#355E3B] font-medium">
+                      Order Status
+                    </Label>
+                    <Select value={updateStatus} onValueChange={setUpdateStatus}>
+                      <SelectTrigger className="border-[#355E3B]/20 focus:border-[#D4AF37]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="confirmed">Confirmed</SelectItem>
+                        <SelectItem value="processing">Processing</SelectItem>
+                        <SelectItem value="shipped">Shipped</SelectItem>
+                        <SelectItem value="delivered">Delivered</SelectItem>
+                        <SelectItem value="cancelled">Cancelled</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="provider" className="text-[#355E3B] font-medium">
+                      Shipping Provider
+                    </Label>
+                    <Select value={shippingProvider} onValueChange={setShippingProvider}>
+                      <SelectTrigger className="border-[#355E3B]/20 focus:border-[#D4AF37]">
+                        <SelectValue placeholder="Select provider" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="DHL">DHL</SelectItem>
+                        <SelectItem value="FedEx">FedEx</SelectItem>
+                        <SelectItem value="BlueDart">BlueDart</SelectItem>
+                        <SelectItem value="IndiaPost">India Post</SelectItem>
+                        <SelectItem value="Delhivery">Delhivery</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="tracking" className="text-[#355E3B] font-medium">
+                      Tracking Number
+                    </Label>
+                    <Input
+                      id="tracking"
+                      value={trackingNumber}
+                      onChange={(e) => setTrackingNumber(e.target.value)}
+                      placeholder="Enter tracking number"
+                      className="border-[#355E3B]/20 focus:border-[#D4AF37]"
+                    />
+                  </div>
                 </div>
               </div>
 
-              <div className="flex justify-end gap-3">
-                <Button variant="outline" onClick={() => setShowOrderDialog(false)}>
+              <div className="flex justify-end gap-3 pt-4 border-t">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowOrderDialog(false)}
+                  disabled={updating}
+                >
                   Cancel
                 </Button>
-                <Button onClick={handleUpdateOrder} className="bg-[#355E3B] hover:bg-[#2A4A2F] text-white">
-                  Update Order
+                <Button 
+                  onClick={handleUpdateOrder} 
+                  className="bg-[#355E3B] hover:bg-[#2A4A2F] text-white"
+                  disabled={updating}
+                >
+                  {updating ? "Updating..." : "Update Order"}
                 </Button>
               </div>
             </div>

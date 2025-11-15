@@ -25,14 +25,14 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
-  title: "Organic Orchard - Premium Dry Fruits | Nature's Richest, Delivered to Your Door",
+  title: "Origiganics by Wallian - Premium Dry Fruits | Nature's Richest, Delivered to Your Door",
   description:
     "Discover our curated collection of premium organic dry fruits, sourced directly from the finest orchards across Pakistan. 100% organic, premium quality, fast delivery.",
   keywords:
     "organic dry fruits, premium almonds, kashmiri almonds, pistachios, dates, walnuts, cashews, healthy snacks, organic food",
-  authors: [{ name: "Organic Orchard" }],
-  creator: "Organic Orchard",
-  publisher: "Organic Orchard",
+  authors: [{ name: "Origiganics by Wallian" }],
+  creator: "Origiganics by Wallian",
+  publisher: "Origiganics by Wallian",
   formatDetection: {
     email: false,
     address: false,
@@ -43,16 +43,16 @@ export const metadata: Metadata = {
     canonical: "/",
   },
   openGraph: {
-    title: "Organic Orchard - Premium Dry Fruits",
+    title: "Origiganics by Wallian - Premium Dry Fruits",
     description: "Nature's Richest, Delivered to Your Door. Premium organic dry fruits from the finest orchards.",
     url: "https://organicorchard.com",
-    siteName: "Organic Orchard",
+    siteName: "Origiganics by Wallian",
     images: [
       {
         url: "/og-image.jpg",
         width: 1200,
         height: 630,
-        alt: "Organic Orchard - Premium Dry Fruits",
+        alt: "Origiganics by Wallian - Premium Dry Fruits",
       },
     ],
     locale: "en_US",
@@ -60,7 +60,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Organic Orchard - Premium Dry Fruits",
+    title: "Origiganics by Wallian - Premium Dry Fruits",
     description: "Nature's Richest, Delivered to Your Door. Premium organic dry fruits from the finest orchards.",
     images: ["/og-image.jpg"],
     creator: "@organicorchard",
@@ -98,7 +98,7 @@ export default function RootLayout({
         <meta name="theme-color" content="#355E3B" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="Organic Orchard" />
+        <meta name="apple-mobile-web-app-title" content="Origiganics by Wallian" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="msapplication-TileColor" content="#355E3B" />
         <meta name="msapplication-config" content="/browserconfig.xml" />

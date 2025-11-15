@@ -12,7 +12,7 @@ const STORE_LOCATION = {
   lat: 36.3235833, // 36°19'24.9"N
   lng: 74.6600556, // 74°39'36.2"E
   address: "Mohallah garabrass karimabad hunza Gilgit-Baltistan Pakistan",
-  name: "Organic Orchard Store",
+  name: "Origiganics by Wallian Store",
   phone: "+92 318 0441303",
   hours: "Mon-Sat: 9 AM - 7 PM",
   rating: 4.8,
