@@ -29,6 +29,7 @@ export async function POST(request: NextRequest) {
 
     const user = await User.findOne({ email: email.toLowerCase() })
     if (!user || !user.password) {
+      console.log('[LOGIN] User not found or no password for:', email.toLowerCase())
       return NextResponse.json(
         {
           success: false,
@@ -39,6 +40,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (!user.isEmailVerified) {
+      console.log('[LOGIN] Email not verified for:', email.toLowerCase())
       return NextResponse.json(
         {
           success: false,
@@ -49,7 +51,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify password
+    console.log('[LOGIN] Verifying password for:', email.toLowerCase())
+    console.log('[LOGIN] Password hash length:', user.password.length)
+    console.log('[LOGIN] Password hash prefix:', user.password.substring(0, 7))
     const isValidPassword = await bcrypt.compare(password, user.password)
+    console.log('[LOGIN] Password valid:', isValidPassword)
+    
     if (!isValidPassword) {
       return NextResponse.json(
         {
