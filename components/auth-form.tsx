@@ -189,7 +189,8 @@ export default function AuthForm({ defaultTab = "signin", onSuccess }: AuthFormP
         description: data.message || "We sent you a verification code. Please check your email.",
       })
 
-      router.push("/signup")
+      // Redirect to verify page with email parameter
+      router.push(`/verify?email=${encodeURIComponent(signupForm.email)}`)
     } catch (error) {
       toast.error("Signup Failed", {
         description: error instanceof Error ? error.message : "An error occurred during signup",

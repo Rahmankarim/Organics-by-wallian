@@ -8,17 +8,11 @@ import { User } from '@/lib/mongoose'
 import { verifyPassword } from '@/lib/auth'
 import dbConnect from '@/lib/mongoose'
 
-// Create MongoDB client only if URI is available
-let clientPromise: Promise<any> | null = null
-
-if (process.env.MONGODB_URI) {
-  const { MongoClient } = require('mongodb')
-  const client = new MongoClient(process.env.MONGODB_URI!)
-  clientPromise = client.connect()
-}
+// Use the cached MongoDB client from lib/mongodb.ts to avoid connection pool exhaustion
+import clientPromise from '@/lib/mongodb'
 
 export const authOptions: AuthOptions = {
-  adapter: clientPromise ? MongoDBAdapter(clientPromise) : undefined,
+  adapter: process.env.MONGODB_URI ? MongoDBAdapter(clientPromise) : undefined,
   providers: [
     CredentialsProvider({
       name: 'credentials',
@@ -35,14 +29,14 @@ export const authOptions: AuthOptions = {
 
         // Find user by email
         const user = await User.findOne({ email: credentials.email.toLowerCase() })
-        
+
         if (!user) {
           throw new Error('Invalid email or password')
         }
 
         // Verify password
         const isPasswordValid = await verifyPassword(credentials.password, user.password!)
-        
+
         if (!isPasswordValid) {
           throw new Error('Invalid email or password')
         }
@@ -85,14 +79,14 @@ export const authOptions: AuthOptions = {
         token.role = (user as any).role
         token.emailVerified = (user as any).emailVerified
       }
-      
+
       // Handle OAuth sign-in
       if (account && account.provider !== 'credentials') {
         await dbConnect()
-        
+
         // Check if user exists in our database
         let dbUser = await User.findOne({ email: token.email })
-        
+
         if (!dbUser) {
           // Create new user for OAuth
           const nameParts = token.name?.split(' ') || ['', '']
@@ -107,24 +101,24 @@ export const authOptions: AuthOptions = {
           })
         } else {
           // Update last login and avatar
-          await User.findByIdAndUpdate(dbUser._id, { 
+          await User.findByIdAndUpdate(dbUser._id, {
             lastLogin: new Date(),
             avatar: token.picture || dbUser.avatar
           })
         }
-        
+
         token.role = dbUser.role
         token.emailVerified = dbUser.isEmailVerified
       }
-      
+
       return token
     },
     async session({ session, token }) {
       // Add custom fields to session
       if (session.user) {
         (session.user as any).id = token.sub
-        ;(session.user as any).role = token.role
-        ;(session.user as any).emailVerified = token.emailVerified
+          ; (session.user as any).role = token.role
+          ; (session.user as any).emailVerified = token.emailVerified
       }
       return session
     },
@@ -133,7 +127,7 @@ export const authOptions: AuthOptions = {
       if (account?.provider !== 'credentials') {
         return true
       }
-      
+
       // For credentials, user is already validated in authorize
       return true
     }

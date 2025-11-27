@@ -7,6 +7,6 @@ export const metadata: Metadata = {
 }
 
 export default function RegisterPage() {
-  // Redirect to the new signup page
-  redirect('/signup')
+  // Redirect to signin page with signup tab
+  redirect('/signin')
 }
