@@ -69,6 +69,11 @@ export async function POST(request: NextRequest) {
     const hashedPassword = await hashPassword(password)
     const hashedCode = await bcrypt.hash(code, 10)
 
+    console.log('[REGISTER] Hashing password for:', sanitizedEmail)
+    console.log('[REGISTER] Original password length:', password.length)
+    console.log('[REGISTER] Hashed password length:', hashedPassword.length)
+    console.log('[REGISTER] Hashed password prefix:', hashedPassword.substring(0, 7))
+
     // Store user data and hashed code in PendingUser collection
     const pendingUser = new PendingUser({
       email: sanitizedEmail,

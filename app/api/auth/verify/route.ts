@@ -87,11 +87,15 @@ export async function POST(request: NextRequest) {
         newsletter: true,
         smsNotifications: false,
         language: "en",
-        currency: "INR",
+        currency: "PKR",
         dietaryRestrictions: [],
       },
       twoFactorEnabled: false,
     })
+
+    console.log('[VERIFY] Creating user:', pendingUser.email)
+    console.log('[VERIFY] Password hash length:', pendingUser.password.length)
+    console.log('[VERIFY] Password hash prefix:', pendingUser.password.substring(0, 7))
 
     await newUser.save()
 
