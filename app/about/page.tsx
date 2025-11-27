@@ -44,20 +44,20 @@ const team = [
   {
     name: "Reyan Ali",
     role: "Founder & CEO",
-    image: "/About/Reyan_Ali.jpg?height=200&width=200",
-    description: "5+ years in organic farming and sustainable agriculture.",
+    image: "/About/Reyan_Ali.jpeg?height=500&width=200",
+    description: "",
   },
   {
     name: "Rahman Karim",
-    role: "Head of Quality",
+    role: "co-Founder & CEO",
     image: "/About/rahman.webp?height=200&width=200",
-    description: "Expert in food safety and quality assurance with 15 years experience.",
+    description: ".",
   },
   {
     name: "Mujtaba Hassan",
     role: "Supply Chain Director",
     image: "/About/muju.jpeg?height=200&width=200",
-    description: "Ensures seamless sourcing from farmers to your doorstep.",
+    description: "",
   },
 ]
 
