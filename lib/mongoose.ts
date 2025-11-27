@@ -51,43 +51,59 @@ async function dbConnect() {
     throw new Error('MongoDB URI not configured for production')
   }
 
+  // If already connected, return immediately
   if (cached.conn) {
     return cached.conn
   }
 
+  // Check mongoose connection state (0=disconnected, 1=connected, 2=connecting, 3=disconnecting)
+  if (mongoose.connection.readyState === 1) {
+    cached.conn = mongoose
+    return cached.conn
+  }
+
+  // If currently connecting, wait for that promise
+  if (mongoose.connection.readyState === 2 && cached.promise) {
+    return cached.promise
+  }
+
   if (!cached.promise) {
     const mongoUri = checkMongoURI() // Check URI only when actually connecting
-    
-    // Enhanced MongoDB connection options for Vercel serverless
+
+    // Enhanced MongoDB connection options for server/dev/production
+    // Increase timeouts significantly to handle slow/intermittent connections
     const opts = {
       bufferCommands: false,
+      // Connection pool settings
       maxPoolSize: 10,
-      serverSelectionTimeoutMS: 5000,
-      socketTimeoutMS: 45000,
-      family: 4, // Use IPv4, skip trying IPv6
-      // SSL/TLS configuration for MongoDB Atlas
-      ssl: true,
-      tls: true,
-      tlsAllowInvalidCertificates: false,
-      tlsAllowInvalidHostnames: false,
-      // Additional connection settings
-      retryWrites: true,
-      w: 'majority',
-      // Connection pool settings for serverless
       minPoolSize: 0,
+      // Increase all timeouts to handle network issues
+      serverSelectionTimeoutMS: 30000, // 30 seconds
+      connectTimeoutMS: 30000, // 30 seconds  
+      socketTimeoutMS: 75000, // 75 seconds
+      waitQueueTimeoutMS: 30000, // 30 seconds
       maxIdleTimeMS: 30000,
-      waitQueueTimeoutMS: 5000,
+      // Use IPv4 to avoid IPv6 issues
+      family: 4,
+      // Atlas connection settings
+      retryWrites: true,
+      retryReads: true,
+      appName: 'organics-by-wallian',
     }
 
-  // Remove 'w' property if present and ensure options match ConnectOptions
-  const { w, ...restOpts } = opts as any;
-  cached.promise = mongoose.connect(mongoUri, restOpts)
+    // Remove 'w' property if present and ensure options match ConnectOptions
+    const { w, ...restOpts } = opts as any;
+    cached.promise = mongoose.connect(mongoUri, restOpts)
   }
 
   try {
+    console.debug('[dbConnect] connecting to MongoDB...')
     cached.conn = await cached.promise
+    console.debug('[dbConnect] MongoDB connected')
   } catch (e) {
+    // Reset promise so subsequent calls can retry
     cached.promise = null
+    console.error('[dbConnect] MongoDB connection error:', e)
     throw e
   }
 
@@ -362,11 +378,11 @@ const CategorySchema = new mongoose.Schema<ICategory>({
   timestamps: true
 })
 
-// Models - only create if not in build environment
+// Models - lazy initialization
 let Product: any, User: any, PendingUser: any, CartItem: any, Order: any, Coupon: any, Review: any, 
     Wishlist: any, BlogPost: any, Analytics: any, Newsletter: any, Category: any
 
-// Function to initialize models safely
+// Function to initialize models safely - called after connection
 function initModels() {
   if (!Product) {
     Product = mongoose.models.Product || mongoose.model<IProduct>('Product', ProductSchema)
@@ -382,10 +398,26 @@ function initModels() {
     Newsletter = mongoose.models.Newsletter || mongoose.model<INewsletter>('Newsletter', NewsletterSchema)
     Category = mongoose.models.Category || mongoose.model<ICategory>('Category', CategorySchema)
   }
+  return { Product, User, PendingUser, CartItem, Order, Coupon, Review, Wishlist, BlogPost, Analytics, Newsletter, Category }
 }
 
-// Only initialize models at runtime, not during build
-if (process.env.NODE_ENV !== 'production' || process.env.MONGODB_URI) {
+// Export getter functions that ensure models are initialized
+export function getProduct() { initModels(); return Product }
+export function getUser() { initModels(); return User }
+export function getPendingUser() { initModels(); return PendingUser }
+export function getCartItem() { initModels(); return CartItem }
+export function getOrder() { initModels(); return Order }
+export function getCoupon() { initModels(); return Coupon }
+export function getReview() { initModels(); return Review }
+export function getWishlist() { initModels(); return Wishlist }
+export function getBlogPost() { initModels(); return BlogPost }
+export function getAnalytics() { initModels(); return Analytics }
+export function getNewsletter() { initModels(); return Newsletter }
+export function getCategory() { initModels(); return Category }
+
+// Also export direct access for backward compatibility (but ensure initialization)
+// Initialize models immediately in non-build environments for backward compatibility
+if (typeof window === 'undefined' && process.env.MONGODB_URI) {
   initModels()
 }
 
