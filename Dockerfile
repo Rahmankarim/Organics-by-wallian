@@ -32,10 +32,8 @@ COPY package.json pnpm-lock.yaml ./
 # Install prod deps only
 RUN pnpm install --prod --frozen-lockfile
 
-# Copy built app
+# Copy built app (only what exists)
 COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/next.config.mjs ./
 
 ENV PORT=8080
 ENV NODE_ENV=production
