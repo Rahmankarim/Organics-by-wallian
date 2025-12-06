@@ -4,11 +4,14 @@ FROM node:18-slim
 # Set working directory
 WORKDIR /app
 
+# Install pnpm
+RUN npm install -g pnpm
+
 # Copy package files
-COPY package.json package-lock.json ./
+COPY package.json pnpm-lock.yaml ./
 
 # Install production dependencies only
-RUN npm ci --only=production
+RUN pnpm install --prod --frozen-lockfile
 
 # Copy the rest of the project
 COPY . .
