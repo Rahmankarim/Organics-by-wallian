@@ -2,7 +2,8 @@
 
 ## Issue: Database Mismatch Between Local and Vercel
 
-**Problem**: 
+**Problem**:
+
 - Local (localhost): Connects to `organic_orchard` database
 - Vercel: Might be connecting to a different database
 
@@ -27,20 +28,21 @@ MONGODB_URI: mongodb+srv://Reyan:reyan1122@cluster0.ym1qsw1.mongodb.net/organic_
 
 Add these variables with the exact values from your `.env.local`:
 
-| Variable Name | Value |
-|---|---|
-| `MONGODB_URI` | `mongodb+srv://Reyan:reyan1122@cluster0.ym1qsw1.mongodb.net/organic_orchard?retryWrites=true&w=majority&appName=Cluster0` |
-| `JWT_SECRET` | `luxury-dry-fruits-super-secret-jwt-key-2025` |
-| `RESEND_API_KEY` | `re_CZJmq6NC_M7FiSAomFxYqDzU7soS6EKLG` |
-| `STRIPE_SECRET_KEY` | `sk_test_your_stripe_secret_key` |
-| `STRIPE_PUBLIC_KEY` | `pk_test_your_stripe_public_key` |
-| `STRIPE_WEBHOOK_SECRET` | `whsec_your_webhook_secret` |
-| `NEXT_PUBLIC_APP_URL` | `https://your-vercel-app-url.vercel.app` |
-| `NODE_ENV` | `production` |
+| Variable Name           | Value                                                                                                                     |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `MONGODB_URI`           | `mongodb+srv://Reyan:reyan1122@cluster0.ym1qsw1.mongodb.net/organic_orchard?retryWrites=true&w=majority&appName=Cluster0` |
+| `JWT_SECRET`            | `luxury-dry-fruits-super-secret-jwt-key-2025`                                                                             |
+| `RESEND_API_KEY`        | `re_CZJmq6NC_M7FiSAomFxYqDzU7soS6EKLG`                                                                                    |
+| `STRIPE_SECRET_KEY`     | `sk_test_your_stripe_secret_key`                                                                                          |
+| `STRIPE_PUBLIC_KEY`     | `pk_test_your_stripe_public_key`                                                                                          |
+| `STRIPE_WEBHOOK_SECRET` | `whsec_your_webhook_secret`                                                                                               |
+| `NEXT_PUBLIC_APP_URL`   | `https://your-vercel-app-url.vercel.app`                                                                                  |
+| `NODE_ENV`              | `production`                                                                                                              |
 
 ### 3. Critical: Set Environment for All Deployment Types
 
 When adding each variable, make sure to select:
+
 - ✅ **Production** (for live deployments)
 - ✅ **Preview** (for pull request deployments)
 - ✅ **Development** (for local development)
@@ -50,6 +52,7 @@ When adding each variable, make sure to select:
 Ensure the URL includes the correct database name: `organic_orchard`
 
 **Current URL Structure**:
+
 ```
 mongodb+srv://[username]:[password]@[cluster]/organic_orchard?retryWrites=true&w=majority
 ```
@@ -66,6 +69,7 @@ After setting environment variables:
 4. Wait for build to complete
 
 Or trigger a redeployment by:
+
 - Pushing a new commit to the branch
 - Running: `vercel --prod` from CLI
 
@@ -107,6 +111,7 @@ If Vercel was showing different data before:
    - Look for database names like: `organics`, `test`, `dev`, etc.
 
 2. If you want to keep that database, update MONGODB_URI to point to it:
+
    ```
    mongodb+srv://Reyan:reyan1122@cluster0.ym1qsw1.mongodb.net/YOUR_OTHER_DB_NAME?...
    ```
@@ -127,11 +132,13 @@ If you have products in multiple databases and want to consolidate:
 ## Quick Command Reference
 
 To redeploy from command line:
+
 ```bash
 vercel --prod
 ```
 
 To view environment variables from CLI:
+
 ```bash
 vercel env pull
 ```
