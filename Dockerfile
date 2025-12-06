@@ -1,27 +1,46 @@
-# Use Node 18 slim image for smaller size
-FROM node:18-slim
+# Build stage
+FROM node:18-alpine AS builder
 
-# Set working directory
 WORKDIR /app
 
-# Copy package files
-COPY package.json package-lock.json ./
+# Install pnpm
+RUN npm install -g pnpm
 
-# Install production dependencies only
-RUN npm ci --only=production
+# Copy package files only
+COPY package.json pnpm-lock.yaml ./
 
-# Copy the rest of the project
+# Install dependencies
+RUN pnpm install --frozen-lockfile
+
+# Copy source
 COPY . .
 
-# Build the Next.js application
-RUN npm run build
+# Build
+RUN pnpm run build
 
-# Expose port 8080 (required by Cloud Run)
-EXPOSE 8080
+# Production stage
+FROM node:18-alpine
 
-# Set environment variables
+WORKDIR /app
+
+# Install pnpm
+RUN npm install -g pnpm
+
+# Copy package files
+COPY package.json pnpm-lock.yaml ./
+
+# Install prod deps only
+RUN pnpm install --prod --frozen-lockfile
+
+# Copy built app
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/next.config.mjs ./
+
 ENV PORT=8080
 ENV NODE_ENV=production
 
-# Start the application
-CMD ["npm", "start"]
+EXPOSE 8080
+
+CMD ["pnpm", "start"]
+# Cloud Run deployment Sat, Dec  6, 2025  6:56:21 PM
