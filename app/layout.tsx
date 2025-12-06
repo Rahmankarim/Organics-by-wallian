@@ -59,14 +59,6 @@ export const metadata: Metadata = {
     locale: "en_US",
     type: "website",
   },
-  twitter: {
-    card: "summary_large_image",
-    title: "Origiganics By Wallian - Premium Organic Products",
-    description: "Premium organic dry fruits and natural beauty products from Pakistan's finest orchards.",
-    images: ["https://origiganicsbywallian.com/logo.jpeg"],
-    creator: "@origiganics",
-    site: "@origiganics",
-  },
   robots: {
     index: true,
     follow: true,
@@ -112,7 +104,6 @@ export default function RootLayout({
     sameAs: [
       "https://facebook.com/origiganicsbywallian",
       "https://instagram.com/origiganicsbywallian",
-      "https://twitter.com/origiganics",
     ],
     founder: {
       "@type": "Person",
