@@ -2,15 +2,27 @@ import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongoose';
 import { Order, CartItem } from '@/lib/mongoose';
 import { getUserFromRequest } from '@/lib/auth';
-import Stripe from 'stripe';
 
 // Route segment config to prevent static analysis during build
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2024-11-20.acacia',
-});
+// Initialize Stripe only when needed (lazy loading)
+let stripe: any;
+
+function getStripe() {
+  if (!stripe) {
+    const Stripe = require('stripe').default;
+    const apiKey = process.env.STRIPE_SECRET_KEY;
+    if (!apiKey) {
+      throw new Error('STRIPE_SECRET_KEY is not configured');
+    }
+    stripe = new Stripe(apiKey, {
+      apiVersion: '2024-11-20.acacia',
+    });
+  }
+  return stripe;
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -77,7 +89,8 @@ export async function POST(request: NextRequest) {
     // Handle Card Payment via Stripe
     if (paymentMethod === 'stripe') {
       try {
-        const session = await stripe.checkout.sessions.create({
+        const stripeClient = getStripe();
+        const session = await stripeClient.checkout.sessions.create({
           payment_method_types: ['card'],
           line_items: [
             {
