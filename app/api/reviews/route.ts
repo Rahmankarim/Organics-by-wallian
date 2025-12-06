@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import dbConnect from '@/lib/mongoose'
-import { Review, Product, Order, Analytics } from '@/lib/mongoose'
+import { Review, Product, Order, Analytics, CartItem } from '@/lib/mongoose'
 import { getUserFromRequest } from '@/lib/auth'
 
 export async function GET(request: NextRequest) {
@@ -123,16 +123,20 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check if user has purchased this product
+    // Check if user has purchased this product (any status or in cart)
     const hasOrderedProduct = await Order.findOne({
       userId: user._id,
-      'items.productId': productId,
-      status: 'delivered'
+      'items.productId': productId
     })
 
-    if (!hasOrderedProduct) {
+    const hasInCart = await CartItem.findOne({
+      userId: user._id,
+      productId: productId
+    })
+
+    if (!hasOrderedProduct && !hasInCart) {
       return NextResponse.json(
-        { error: 'You can only review products you have purchased' },
+        { error: 'You can only review products you have purchased or have in your cart' },
         { status: 403 }
       )
     }

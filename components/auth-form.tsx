@@ -93,8 +93,13 @@ export default function AuthForm({ defaultTab = "signin", onSuccess }: AuthFormP
         throw new Error(errorMessage)
       }
 
+      // Store token in localStorage
+      if (data.token) {
+        localStorage.setItem('auth-token', data.token)
+      }
+
       if (data.data && data.data.user) {
-        login(data.data.user, "token-stored-in-cookie")
+        login(data.data.user, data.token || "token-stored-in-cookie")
       }
 
       await new Promise((resolve) => setTimeout(resolve, 200))

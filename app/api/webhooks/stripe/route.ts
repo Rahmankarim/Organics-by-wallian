@@ -42,6 +42,10 @@ export async function POST(request: NextRequest) {
     await dbConnect()
 
     switch (event.type) {
+      case 'checkout.session.completed':
+        await handleCheckoutSessionCompleted(event.data.object as Stripe.Checkout.Session)
+        break
+
       case 'payment_intent.succeeded':
         await handlePaymentSucceeded(event.data.object as Stripe.PaymentIntent)
         break
@@ -75,6 +79,39 @@ export async function POST(request: NextRequest) {
       { error: 'Webhook processing failed' },
       { status: 500 }
     )
+  }
+}
+
+async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) {
+  try {
+    const orderId = session.metadata?.orderId
+    
+    if (!orderId) {
+      console.error('No order ID in checkout session metadata')
+      return
+    }
+
+    console.log('[WEBHOOK] Processing checkout session for order:', orderId)
+
+    const order = await Order.findById(orderId)
+    
+    if (!order) {
+      console.error(`Order ${orderId} not found`)
+      return
+    }
+
+    // Update order status to confirmed and payment succeeded
+    await Order.findByIdAndUpdate(orderId, {
+      paymentStatus: 'succeeded',
+      status: 'confirmed',
+      paymentIntentId: session.payment_intent as string,
+      updatedAt: new Date()
+    })
+
+    console.log(`Checkout session completed for order ${orderId}`)
+
+  } catch (error) {
+    console.error('Error handling checkout session completion:', error)
   }
 }
 

@@ -105,23 +105,13 @@ export async function POST(request: NextRequest) {
       tags: body.tags || [],
       variants: body.variants || [],
       nutritionFacts: body.nutritionFacts || {
-        calories: '0',
+        calories: '0 per 100g',
         protein: '0g',
         fat: '0g',
         carbs: '0g',
         fiber: '0g',
         vitaminE: '0mg',
         serving: '100g'
-      },
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      nutritionFacts: body.nutritionFacts || {
-        calories: "0 per 100g",
-        protein: "0g",
-        fat: "0g",
-        carbs: "0g",
-        fiber: "0g",
-        vitaminE: "0mg",
       },
       createdAt: new Date(),
       updatedAt: new Date()

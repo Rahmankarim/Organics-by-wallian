@@ -6,6 +6,8 @@ import dbConnect, { Product } from '@/lib/mongoose'
 // Normalize image path helper: strip leading /public and ensure leading slash; preserve absolute URLs
 function normalizeImagePath(img: string | undefined) {
   if (!img) return '/placeholder.svg'
+  // Skip base64 data URIs - they cause 404 errors
+  if (img.startsWith('data:image')) return '/placeholder.svg'
   if (/^https?:\/\//.test(img)) return img
   const stripped = img.replace(/^\/public/, '')
   return stripped.startsWith('/') ? stripped : `/${stripped}`

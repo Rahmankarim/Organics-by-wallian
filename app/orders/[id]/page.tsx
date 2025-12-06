@@ -91,7 +91,9 @@ export default function OrderPage() {
         })
 
         if (response.ok) {
-          const orderData = await response.json()
+          const data = await response.json()
+          // Handle both { order: {...} } and direct order object
+          const orderData = data.order || data
           setOrder(orderData)
           
           // Show payment status toast
@@ -102,10 +104,14 @@ export default function OrderPage() {
           }
         } else {
           setError('Order not found')
+          // Redirect to home after 2 seconds
+          setTimeout(() => router.push('/'), 2000)
         }
       } catch (error) {
         console.error('Error fetching order:', error)
         setError('Failed to load order details')
+        // Redirect to home after 2 seconds on error
+        setTimeout(() => router.push('/'), 2000)
       } finally {
         setIsLoading(false)
       }
@@ -129,6 +135,8 @@ export default function OrderPage() {
   }
 
   const getStatusColor = (status: string) => {
+    if (!status) return 'bg-gray-100 text-gray-800'
+    
     switch (status.toLowerCase()) {
       case 'confirmed':
       case 'paid':
@@ -180,11 +188,18 @@ export default function OrderPage() {
               <p className="text-gray-600 mb-6">
                 {error || 'The order you are looking for does not exist.'}
               </p>
-              <Link href="/orders">
-                <Button className="w-full bg-[#355E3B] hover:bg-[#2d4f31]">
-                  View All Orders
-                </Button>
-              </Link>
+              <div className="space-y-2">
+                <Link href="/">
+                  <Button className="w-full bg-[#355E3B] hover:bg-[#2d4f31]">
+                    Go to Home
+                  </Button>
+                </Link>
+                <Link href="/orders">
+                  <Button variant="outline" className="w-full">
+                    View All Orders
+                  </Button>
+                </Link>
+              </div>
             </CardContent>
           </Card>
         </div>

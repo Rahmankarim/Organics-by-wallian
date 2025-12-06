@@ -20,20 +20,43 @@ export async function GET(
 
     const orderId = params.id
 
-    // Build query - users can only see their own orders, admins can see all
-    const query: any = { orderId }
-    if (!isAdmin(user)) {
-      query.userId = user._id
+    console.log('[ORDER DETAIL] Fetching order:', { orderId, userId: user._id })
+
+    // Try to find by MongoDB _id first, then by orderNumber
+    let order = null
+    
+    // Check if it's a valid MongoDB ObjectId
+    if (orderId.match(/^[0-9a-fA-F]{24}$/)) {
+      // Build query - users can only see their own orders, admins can see all
+      const query: any = { _id: orderId }
+      if (!isAdmin(user)) {
+        query.userId = user._id
+      }
+      order = await Order.findOne(query).lean()
+    }
+    
+    // If not found, try by orderNumber
+    if (!order) {
+      const query: any = { orderNumber: orderId }
+      if (!isAdmin(user)) {
+        query.userId = user._id
+      }
+      order = await Order.findOne(query).lean()
     }
 
-    const order = await Order.findOne(query).lean()
-
     if (!order) {
+      console.log('[ORDER DETAIL] Order not found')
       return NextResponse.json(
         { error: 'Order not found' },
         { status: 404 }
       )
     }
+
+    console.log('[ORDER DETAIL] Order found:', { 
+      _id: order._id,
+      orderNumber: order.orderNumber,
+      status: order.status 
+    })
 
     return NextResponse.json({ order })
 
@@ -64,13 +87,25 @@ export async function PUT(
     const orderId = params.id
     const body = await request.json()
 
-    // Find the order
-    const query: any = { orderId }
-    if (!isAdmin(user)) {
-      query.userId = user._id
+    // Try to find by MongoDB _id first, then by orderNumber
+    let order = null
+    
+    if (orderId.match(/^[0-9a-fA-F]{24}$/)) {
+      const query: any = { _id: orderId }
+      if (!isAdmin(user)) {
+        query.userId = user._id
+      }
+      order = await Order.findOne(query)
+    }
+    
+    if (!order) {
+      const query: any = { orderNumber: orderId }
+      if (!isAdmin(user)) {
+        query.userId = user._id
+      }
+      order = await Order.findOne(query)
     }
 
-    const order = await Order.findOne(query)
     if (!order) {
       return NextResponse.json(
         { error: 'Order not found' },

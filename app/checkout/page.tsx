@@ -77,7 +77,7 @@ export default function CheckoutPage() {
     pincode: "",
     landmark: ""
   })
-  const [paymentMethod, setPaymentMethod] = useState("easypaisa")
+  const [paymentMethod, setPaymentMethod] = useState("cod")
   const [isProcessingPayment, setIsProcessingPayment] = useState(false)
   const [isLoadingCart, setIsLoadingCart] = useState(true)
   const [orderNotes, setOrderNotes] = useState("")
@@ -189,137 +189,95 @@ export default function CheckoutPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('auth-token') || ''}`
         },
         credentials: 'include',
         body: JSON.stringify({
-          items: checkoutData.cartItems,
+          orderItems: checkoutData.cartItems,
           shippingAddress,
           paymentMethod,
-          orderNotes,
-          summary: checkoutData.cartSummary
+          specialInstructions: orderNotes
         })
       })
 
-      if (!orderResponse.ok) {
-        throw new Error('Failed to create order')
-      }
-
       const order = await orderResponse.json()
-
-      if (paymentMethod === 'cod') {
-        // Cash on Delivery - redirect to success page
-        router.push(`/orders/${order.id}?payment=success`)
-        toast.success('Order placed successfully!')
-        return
+      
+      if (!orderResponse.ok) {
+        throw new Error(order.error || 'Failed to create order')
+      }
+      
+      // Check if order was created successfully
+      if (!order || !order._id) {
+        throw new Error('Order was not created properly')
       }
 
-      // EasyPaisa payment
-      if (paymentMethod === 'easypaisa') {
+      // Process payment based on method
+      if (paymentMethod === 'cod') {
+        // Cash on Delivery - update order status via payment API
         try {
-          const easyPaisaResponse = await fetch('/api/easypaisa/initiate', {
+          const codResponse = await fetch('/api/payments', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
+              'Authorization': `Bearer ${localStorage.getItem('auth-token') || ''}`
             },
             credentials: 'include',
             body: JSON.stringify({
-              orderId: order.id,
+              orderId: order._id,
               amount: checkoutData.cartSummary.total,
-              customerPhone: shippingAddress.phoneNumber,
-              customerEmail: shippingAddress.email,
-              returnUrl: `${window.location.origin}/order-success?orderId=${order.id}&payment=success`,
-              cancelUrl: `${window.location.origin}/order-success?orderId=${order.id}&payment=cancelled`
+              paymentMethod: 'cod'
             })
           })
 
-          const easyPaisaData = await easyPaisaResponse.json()
+          const codData = await codResponse.json()
 
-          if (easyPaisaData.success && easyPaisaData.redirectUrl) {
-            // Redirect to EasyPaisa payment page
-            window.location.href = easyPaisaData.redirectUrl
-            return
+          if (codData.success) {
+            toast.success('Order placed successfully! Pay on delivery.')
+            router.push(`/orders/${order._id}?payment=success`)
           } else {
-            throw new Error(easyPaisaData.error || 'Failed to initiate EasyPaisa payment')
+            throw new Error(codData.error || 'Failed to confirm COD order')
           }
         } catch (error: any) {
-          console.error('EasyPaisa payment error:', error)
-          toast.error(error.message || 'Failed to process EasyPaisa payment')
+          console.error('COD confirmation error:', error)
+          toast.error(error.message || 'Failed to confirm order')
           setIsProcessingPayment(false)
-          return
         }
+        return
       }
 
-      // Razorpay payment
-      if (paymentMethod === 'razorpay') {
-        // Load Razorpay script
-        const script = document.createElement('script')
-        script.src = 'https://checkout.razorpay.com/v1/checkout.js'
-        script.async = true
-        document.body.appendChild(script)
+      // Card Payment - Stripe integration
+      if (paymentMethod === 'card') {
+        try {
+          const stripeResponse = await fetch('/api/payments', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${localStorage.getItem('auth-token') || ''}`
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+              orderId: order._id,
+              amount: checkoutData.cartSummary.total,
+              paymentMethod: 'stripe',
+              returnUrl: `${window.location.origin}/orders/${order._id}?payment=success`,
+              cancelUrl: `${window.location.origin}/checkout`
+            })
+          })
 
-        script.onload = () => {
-          const options = {
-            key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-            amount: Math.round(checkoutData.cartSummary.total * 100), // Amount in paise
-            currency: 'INR',
-            name: 'Origiganics by Wallian',
-            description: `Order #${order.orderNumber}`,
-            order_id: order.razorpayOrderId,
-            handler: async function (response: any) {
-              try {
-                // Verify payment
-                const verifyResponse = await fetch('/api/orders/verify-payment', {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                  },
-                  credentials: 'include',
-                  body: JSON.stringify({
-                    orderId: order.id,
-                    razorpayPaymentId: response.razorpay_payment_id,
-                    razorpayOrderId: response.razorpay_order_id,
-                    razorpaySignature: response.razorpay_signature
-                  })
-                })
+          const stripeData = await stripeResponse.json()
 
-                if (verifyResponse.ok) {
-                  router.push(`/orders/${order.id}?payment=success`)
-                  toast.success('Payment successful!')
-                } else {
-                  throw new Error('Payment verification failed')
-                }
-              } catch (error) {
-                console.error('Payment verification error:', error)
-                toast.error('Payment verification failed')
-                router.push(`/orders/${order.id}?payment=failed`)
-              }
-            },
-            prefill: {
-              name: shippingAddress.fullName,
-              email: shippingAddress.email,
-              contact: shippingAddress.phoneNumber,
-            },
-            notes: {
-              address: `${shippingAddress.addressLine1}, ${shippingAddress.city}`,
-            },
-            theme: {
-              color: '#355E3B',
-            },
-            modal: {
-              ondismiss: function () {
-                setIsProcessingPayment(false)
-                toast.error('Payment cancelled')
-              }
-            }
+          if (stripeData.success && stripeData.url) {
+            // Redirect to Stripe checkout
+            window.location.href = stripeData.url
+            return
+          } else {
+            throw new Error(stripeData.error || 'Failed to initiate card payment')
           }
-
-          const razorpay = new (window as any).Razorpay(options)
-          razorpay.open()
-        }
-
-        script.onerror = () => {
-          toast.error('Failed to load payment gateway')
+        } catch (error: any) {
+          console.error('Card payment error:', error)
+          toast.error(error.message || 'Failed to process card payment')
           setIsProcessingPayment(false)
+          return
         }
       }
 
@@ -494,37 +452,28 @@ export default function CheckoutPage() {
               </CardHeader>
               <CardContent>
                 <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod}>
-                  <div className="flex items-center space-x-2 p-4 border rounded-lg">
-                    <RadioGroupItem value="easypaisa" id="easypaisa" />
-                    <Label htmlFor="easypaisa" className="flex-1 cursor-pointer">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="font-medium">EasyPaisa</p>
-                          <p className="text-sm text-gray-600">Pay securely with EasyPaisa wallet</p>
-                        </div>
-                        <Badge variant="secondary" className="bg-green-100 text-green-800">Recommended</Badge>
-                      </div>
-                    </Label>
-                  </div>
-                  
-                  <div className="flex items-center space-x-2 p-4 border rounded-lg">
-                    <RadioGroupItem value="razorpay" id="razorpay" />
-                    <Label htmlFor="razorpay" className="flex-1 cursor-pointer">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="font-medium">Credit/Debit Card, UPI, Net Banking</p>
-                          <p className="text-sm text-gray-600">Powered by Razorpay</p>
-                        </div>
-                      </div>
-                    </Label>
-                  </div>
-                  
-                  <div className="flex items-center space-x-2 p-4 border rounded-lg">
+                  <div className="flex items-center space-x-2 p-4 border-2 border-[#355E3B] rounded-lg bg-green-50">
                     <RadioGroupItem value="cod" id="cod" />
                     <Label htmlFor="cod" className="flex-1 cursor-pointer">
-                      <div>
-                        <p className="font-medium">Cash on Delivery</p>
-                        <p className="text-sm text-gray-600">Pay when you receive your order</p>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-semibold text-[#355E3B]">Cash on Delivery</p>
+                          <p className="text-sm text-gray-600">Pay when you receive your order</p>
+                        </div>
+                        <Badge className="bg-[#355E3B] text-white">Recommended</Badge>
+                      </div>
+                    </Label>
+                  </div>
+                  
+                  <div className="flex items-center space-x-2 p-4 border-2 rounded-lg hover:border-[#355E3B]">
+                    <RadioGroupItem value="card" id="card" />
+                    <Label htmlFor="card" className="flex-1 cursor-pointer">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-semibold">Card Payment</p>
+                          <p className="text-sm text-gray-600">Pay securely with credit/debit card</p>
+                        </div>
+                        <CreditCard className="h-5 w-5 text-gray-400" />
                       </div>
                     </Label>
                   </div>
@@ -622,11 +571,6 @@ export default function CheckoutPage() {
                     <>
                       <CheckCircle className="mr-2 h-4 w-4" />
                       Place Order (COD)
-                    </>
-                  ) : paymentMethod === 'easypaisa' ? (
-                    <>
-                      <CreditCard className="mr-2 h-4 w-4" />
-                      Pay with EasyPaisa - Rs. {checkoutData.cartSummary.total.toLocaleString()}
                     </>
                   ) : (
                     <>
