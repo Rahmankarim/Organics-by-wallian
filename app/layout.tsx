@@ -50,7 +50,7 @@ export const metadata: Metadata = {
     siteName: "Origiganics By Wallian",
     images: [
       {
-        url: "https://origiganicsbywallian.com/logo.png",
+        url: "https://origiganicsbywallian.com/logo.jpeg",
         width: 1200,
         height: 630,
         alt: "Origiganics By Wallian - Premium Organic Products",
@@ -63,7 +63,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Origiganics By Wallian - Premium Organic Products",
     description: "Premium organic dry fruits and natural beauty products from Pakistan's finest orchards.",
-    images: ["https://origiganicsbywallian.com/logo.png"],
+    images: ["https://origiganicsbywallian.com/logo.jpeg"],
     creator: "@origiganics",
     site: "@origiganics",
   },
@@ -98,7 +98,7 @@ export default function RootLayout({
     "@type": "Organization",
     name: "Origiganics By Wallian",
     url: "https://origiganicsbywallian.com/",
-    logo: "https://origiganicsbywallian.com/logo.png",
+    logo: "https://origiganicsbywallian.com/logo.jpeg",
     description: "Premium organic dry fruits and natural beauty products sourced from Pakistan's finest orchards. Committed to quality, sustainability, and natural wellness.",
     address: {
       "@type": "PostalAddress",
@@ -140,10 +140,10 @@ export default function RootLayout({
         
         {/* Favicons - Multiple Sizes */}
         <link rel="icon" href="/favicon.ico" sizes="any" />
-        <link rel="icon" type="image/png" sizes="16x16" href="/logo.png" />
-        <link rel="icon" type="image/png" sizes="32x32" href="/logo.png" />
-        <link rel="icon" type="image/png" sizes="192x192" href="/logo.png" />
-        <link rel="apple-touch-icon" sizes="180x180" href="/logo.png" />
+        <link rel="icon" type="image/jpeg" sizes="16x16" href="/logo.jpeg" />
+        <link rel="icon" type="image/jpeg" sizes="32x32" href="/logo.jpeg" />
+        <link rel="icon" type="image/jpeg" sizes="192x192" href="/logo.jpeg" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/logo.jpeg" />
         
         {/* PWA Manifest */}
         <link rel="manifest" href="/site.webmanifest" />
@@ -158,7 +158,7 @@ export default function RootLayout({
         
         {/* Microsoft Tiles */}
         <meta name="msapplication-config" content="/browserconfig.xml" />
-        <meta name="msapplication-TileImage" content="/logo.png" />
+        <meta name="msapplication-TileImage" content="/logo.jpeg" />
         
         {/* Sitemap */}
         <link rel="sitemap" type="application/xml" href="https://origiganicsbywallian.com/sitemap.xml" />
