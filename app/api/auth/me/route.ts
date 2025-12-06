@@ -9,13 +9,21 @@ export const runtime = 'nodejs'
 
 export async function GET(request: NextRequest) {
   try {
-    // Get token from Authorization header
+    // Get token from Authorization header or cookies
+    let token = null
     const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      token = authHeader.substring(7)
+    } else {
+      // Try to get from cookies
+      token = request.cookies.get('auth-token')?.value
+    }
+    
+    if (!token) {
       return NextResponse.json({ error: 'No token provided' }, { status: 401 })
     }
 
-    const token = authHeader.substring(7)
     const decoded = await verifyToken(token)
     
     if (!decoded) {

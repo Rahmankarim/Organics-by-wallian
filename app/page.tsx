@@ -153,7 +153,9 @@ export default function HomePage() {
                 className="border-white text-white hover:bg-white hover:text-[#355E3B] px-8 py-4 text-lg bg-transparent"
                 asChild
               >
-                <Link href="/about">Learn Our Story</Link>
+                <Link href="https://docs.google.com/forms/d/e/1FAIpQLScA2ZlRzDAUj52iI1nWd0l98073bSdo2dw-nDpt_AV-8XbT9Q/viewform?usp=dialog" target="_blank" rel="noopener noreferrer">
+                  Seller Registration Form
+                </Link>
               </Button>
             </motion.div>
           </div>

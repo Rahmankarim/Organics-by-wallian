@@ -49,7 +49,7 @@ const team = [
   },
   {
     name: "Rahman Karim",
-    role: "co-Founder & CEO",
+    role: "Co-Founder & CEO",
     image: "/About/rahman.webp?height=200&width=200",
     description: ".",
   },

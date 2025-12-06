@@ -86,6 +86,7 @@ export async function POST(request: NextRequest) {
       {
         success: true,
         message: "Login successful",
+        token: token, // Include token in response for localStorage
         data: {
           user: {
             id: user._id,
@@ -100,7 +101,7 @@ export async function POST(request: NextRequest) {
     )
 
     // Set JWT as httpOnly cookie
-    response.cookies.set("token", token, {
+    response.cookies.set("auth-token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",

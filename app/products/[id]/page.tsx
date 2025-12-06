@@ -6,12 +6,14 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Textarea } from "@/components/ui/textarea"
 import { Star, ShoppingCart, Heart, Minus, Plus, Truck, Shield, RotateCcw, Award, Share2 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { useParams, useRouter } from "next/navigation"
+import { useToast } from "@/hooks/use-toast"
 
 interface Product {
   _id?: string  // MongoDB ObjectId
@@ -40,36 +42,26 @@ interface Product {
   benefits: string[]
 }
 
-const reviews = [
-  {
-    id: 1,
-    name: "Priya Sharma",
-    rating: 5,
-    date: "2024-01-15",
-    comment: "Absolutely amazing quality! These are so fresh and crunchy. The packaging is also very premium.",
-    verified: true,
-  },
-  {
-    id: 2,
-    name: "Rajesh Kumar",
-    rating: 5,
-    date: "2024-01-10",
-    comment: "Best quality I've ever experienced. Worth every penny. Fast delivery too!",
-    verified: true,
-  },
-  {
-    id: 3,
-    name: "Anita Patel",
-    rating: 4,
-    date: "2024-01-08",
-    comment: "Great quality products. My family loves them. Will definitely order again.",
-    verified: true,
-  },
-]
+interface Review {
+  _id: string
+  userId: {
+    _id: string
+    name: string
+    avatar?: string
+  }
+  productId: string
+  rating: number
+  title?: string
+  comment: string
+  images?: string[]
+  verified: boolean
+  createdAt: string
+}
 
 export default function ProductDetailPage() {
   const params = useParams()
   const router = useRouter()
+  const { toast } = useToast()
   const [product, setProduct] = useState<Product | null>(null)
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([])
   const [selectedImage, setSelectedImage] = useState(0)
@@ -77,6 +69,13 @@ export default function ProductDetailPage() {
   const [isWishlisted, setIsWishlisted] = useState(false)
   const [loading, setLoading] = useState(true)
   const [addingToCart, setAddingToCart] = useState(false)
+  const [reviews, setReviews] = useState<Review[]>([])
+  const [reviewsLoading, setReviewsLoading] = useState(false)
+  const [showReviewForm, setShowReviewForm] = useState(false)
+  const [reviewRating, setReviewRating] = useState(0)
+  const [reviewComment, setReviewComment] = useState("")
+  const [submittingReview, setSubmittingReview] = useState(false)
+  const [user, setUser] = useState<any>(null)
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -103,6 +102,52 @@ export default function ProductDetailPage() {
       fetchProduct()
     }
   }, [params.id, router])
+
+  useEffect(() => {
+    const fetchReviews = async () => {
+      if (!params.id) return
+      
+      setReviewsLoading(true)
+      try {
+        const response = await fetch(`/api/reviews?productId=${params.id}`)
+        const data = await response.json()
+        
+        if (response.ok) {
+          setReviews(data.reviews || [])
+        }
+      } catch (error) {
+        console.error("Error fetching reviews:", error)
+      } finally {
+        setReviewsLoading(false)
+      }
+    }
+
+    fetchReviews()
+  }, [params.id])
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const token = localStorage.getItem('auth-token')
+        if (!token) return
+        
+        const response = await fetch('/api/auth/me', {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        })
+        
+        if (response.ok) {
+          const data = await response.json()
+          setUser(data.user)
+        }
+      } catch (error) {
+        console.error('Error fetching user:', error)
+      }
+    }
+
+    fetchUser()
+  }, [])
 
   const handleQuantityChange = (change: number) => {
     const newQuantity = quantity + change
@@ -140,6 +185,87 @@ export default function ProductDetailPage() {
       alert("Error adding product to cart")
     } finally {
       setAddingToCart(false)
+    }
+  }
+
+  const handleSubmitReview = async () => {
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please login to submit a review",
+        variant: "destructive"
+      })
+      router.push('/login')
+      return
+    }
+
+    if (reviewRating === 0) {
+      toast({
+        title: "Rating Required",
+        description: "Please select a rating",
+        variant: "destructive"
+      })
+      return
+    }
+
+    if (!reviewComment.trim()) {
+      toast({
+        title: "Comment Required",
+        description: "Please write a review comment",
+        variant: "destructive"
+      })
+      return
+    }
+
+    setSubmittingReview(true)
+    try {
+      const token = localStorage.getItem('auth-token')
+      const response = await fetch('/api/reviews', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          productId: params.id,
+          rating: reviewRating,
+          comment: reviewComment
+        })
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        toast({
+          title: "Review Submitted",
+          description: "Thank you for your review!"
+        })
+        setShowReviewForm(false)
+        setReviewRating(0)
+        setReviewComment("")
+        
+        // Refresh reviews
+        const reviewsResponse = await fetch(`/api/reviews?productId=${params.id}`)
+        const reviewsData = await reviewsResponse.json()
+        if (reviewsResponse.ok) {
+          setReviews(reviewsData.reviews || [])
+        }
+      } else {
+        toast({
+          title: "Error",
+          description: data.error || "Failed to submit review",
+          variant: "destructive"
+        })
+      }
+    } catch (error) {
+      console.error('Error submitting review:', error)
+      toast({
+        title: "Error",
+        description: "Failed to submit review",
+        variant: "destructive"
+      })
+    } finally {
+      setSubmittingReview(false)
     }
   }
 
@@ -346,14 +472,6 @@ export default function ProductDetailPage() {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="flex-1 border-[#355E3B] text-[#355E3B] hover:bg-[#355E3B] hover:text-white bg-transparent"
-                  disabled={!product.inStock}
-                >
-                  Buy Now
-                </Button>
-                <Button
-                  size="lg"
-                  variant="outline"
                   className="border-[#355E3B] text-[#355E3B] hover:bg-[#355E3B] hover:text-white bg-transparent"
                 >
                   <Share2 className="w-5 h-5" />
@@ -438,43 +556,103 @@ export default function ProductDetailPage() {
             <TabsContent value="reviews" className="mt-6">
               <Card className="p-6 bg-white">
                 <div className="flex justify-between items-center mb-6">
-                  <h3 className="text-xl font-semibold text-[#355E3B]">Customer Reviews</h3>
+                  <h3 className="text-xl font-semibold text-[#355E3B]">Customer Reviews ({reviews.length})</h3>
                   <Button
                     variant="outline"
                     className="border-[#355E3B] text-[#355E3B] hover:bg-[#355E3B] hover:text-white bg-transparent"
+                    onClick={() => setShowReviewForm(!showReviewForm)}
                   >
-                    Write a Review
+                    {showReviewForm ? "Cancel" : "Write a Review"}
                   </Button>
                 </div>
 
-                <div className="space-y-6">
-                  {reviews.map((review) => (
-                    <div key={review.id} className="border-b border-gray-200 pb-6 last:border-b-0">
-                      <div className="flex justify-between items-start mb-2">
-                        <div>
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="font-medium text-[#355E3B]">{review.name}</span>
-                            {review.verified && (
-                              <Badge className="bg-green-100 text-green-800 text-xs">Verified Purchase</Badge>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-1">
-                            {[...Array(5)].map((_, i) => (
-                              <Star
-                                key={i}
-                                className={`w-4 h-4 ${
-                                  i < review.rating ? "fill-[#D4AF37] text-[#D4AF37]" : "text-gray-300"
-                                }`}
-                              />
-                            ))}
-                          </div>
-                        </div>
-                        <span className="text-sm text-[#6F4E37]">{new Date(review.date).toLocaleDateString()}</span>
+                {showReviewForm && (
+                  <Card className="p-4 bg-[#F4EBD0] mb-6">
+                    <h4 className="font-semibold text-[#355E3B] mb-4">Write Your Review</h4>
+                    
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium text-[#355E3B] mb-2">Rating</label>
+                      <div className="flex gap-2">
+                        {[1, 2, 3, 4, 5].map((rating) => (
+                          <button
+                            key={rating}
+                            type="button"
+                            onClick={() => setReviewRating(rating)}
+                            className="focus:outline-none"
+                          >
+                            <Star
+                              className={`w-8 h-8 cursor-pointer transition-colors ${
+                                rating <= reviewRating
+                                  ? "fill-[#D4AF37] text-[#D4AF37]"
+                                  : "text-gray-300 hover:text-[#D4AF37]"
+                              }`}
+                            />
+                          </button>
+                        ))}
                       </div>
-                      <p className="text-[#6F4E37]">{review.comment}</p>
                     </div>
-                  ))}
-                </div>
+
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium text-[#355E3B] mb-2">Your Review</label>
+                      <Textarea
+                        placeholder="Share your experience with this product..."
+                        value={reviewComment}
+                        onChange={(e) => setReviewComment(e.target.value)}
+                        className="min-h-[100px] bg-white border-[#355E3B]/20"
+                      />
+                    </div>
+
+                    <Button
+                      onClick={handleSubmitReview}
+                      disabled={submittingReview}
+                      className="bg-[#355E3B] hover:bg-[#2A4A2F] text-white"
+                    >
+                      {submittingReview ? "Submitting..." : "Submit Review"}
+                    </Button>
+                  </Card>
+                )}
+
+                {reviewsLoading ? (
+                  <div className="text-center py-8 text-[#6F4E37]">Loading reviews...</div>
+                ) : reviews.length === 0 ? (
+                  <div className="text-center py-8 text-[#6F4E37]">
+                    <p>No reviews yet. Be the first to review this product!</p>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    {reviews.map((review) => (
+                      <div key={review._id} className="border-b border-gray-200 pb-6 last:border-b-0">
+                        <div className="flex justify-between items-start mb-2">
+                          <div>
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="font-medium text-[#355E3B]">{review.userId.name}</span>
+                              {review.verified && (
+                                <Badge className="bg-green-100 text-green-800 text-xs">Verified Purchase</Badge>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-1">
+                              {[...Array(5)].map((_, i) => (
+                                <Star
+                                  key={i}
+                                  className={`w-4 h-4 ${
+                                    i < review.rating ? "fill-[#D4AF37] text-[#D4AF37]" : "text-gray-300"
+                                  }`}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                          <span className="text-sm text-[#6F4E37]">
+                            {new Date(review.createdAt).toLocaleDateString()}
+                          </span>
+                        </div>
+                        {review.title && (
+                          <h5 className="font-medium text-[#355E3B] mb-1">{review.title}</h5>
+                        )}
+                        <p className="text-[#6F4E37]">{review.comment}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </Card>
             </TabsContent>
           </Tabs>

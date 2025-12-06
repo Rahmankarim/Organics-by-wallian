@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
     }
 
     const client = await clientPromise
-    const db = client.db('luxury-dry-fruits')
+    const db = client.db('organic_orchard')
 
     // Find the order
     const order = await db.collection('orders').findOne({ 

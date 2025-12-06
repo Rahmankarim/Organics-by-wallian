@@ -1,7 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server'
+import mongoose from 'mongoose'
 import dbConnect from '@/lib/mongoose'
 import { Order, Product, CartItem, Analytics, User } from '@/lib/mongoose'
 import { getUserFromRequest, isAdmin } from '@/lib/auth'
+
+// Helper to resolve product by either ObjectId or legacy numeric id
+async function resolveProduct(productRef: any) {
+  if (!productRef && productRef !== 0) return null
+  
+  // If it's a valid ObjectId string, query by _id
+  if (typeof productRef === 'string' && mongoose.isValidObjectId(productRef)) {
+    return await Product.findById(productRef).lean()
+  }
+
+  // If numeric (string of digits or number), query by legacy numeric id field
+  if (typeof productRef === 'number' || (typeof productRef === 'string' && /^\d+$/.test(productRef))) {
+    const numericId = typeof productRef === 'string' ? parseInt(productRef, 10) : productRef
+    return await Product.findOne({ id: numericId }).lean()
+  }
+
+  return null
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -105,6 +124,12 @@ export async function POST(request: NextRequest) {
     let items = orderItems
     let subtotal = 0
 
+    console.log('[ORDER] Creating order with:', { 
+      hasOrderItems: !!orderItems, 
+      itemCount: orderItems?.length,
+      userId: user._id 
+    })
+
     // If no orderItems provided, get from cart
     if (!orderItems || orderItems.length === 0) {
       const cartItems = await CartItem.find({ userId: user._id }).lean()
@@ -160,19 +185,62 @@ export async function POST(request: NextRequest) {
         })
       )
     } else {
-      // Validate provided order items
-      for (const item of orderItems) {
-        const product = await Product.findOne({ id: item.productId })
-        if (!product) {
-          return NextResponse.json(
-            { error: `Product ${item.productId} not found` },
-            { status: 404 }
-          )
-        }
-        subtotal += item.price * item.quantity
-      }
-      items = orderItems
+      // Validate and enrich provided order items (from checkout)
+      items = await Promise.all(
+        orderItems.map(async (item: any) => {
+          // Item might have product nested or direct productId
+          const productData = item.product
+          const productId = item.productId || productData?.id
+          
+          console.log('[ORDER] Processing item:', { productId, hasProductData: !!productData })
+          
+          // Fetch product using the resolveProduct helper (handles both ObjectId and numeric id)
+          const product = await resolveProduct(productId)
+          
+          if (!product) {
+            throw new Error(`Product ${productId} not found`)
+          }
+
+          console.log('[ORDER] Product found:', { 
+            id: product.id, 
+            _id: product._id,
+            name: product.name,
+            hasImages: !!product.images?.length
+          })
+
+          // Get variant details if applicable
+          let selectedVariant = null
+          let price = item.price || product.price
+          
+          if (item.variantId) {
+            selectedVariant = product.variants.find((v: any) => v.id === item.variantId)
+            if (selectedVariant) {
+              price = selectedVariant.price
+            }
+          }
+
+          subtotal += price * item.quantity
+
+          return {
+            productId: product.id || productId,
+            variantId: item.variantId,
+            name: productData?.name || item.name || product.name,
+            price,
+            quantity: item.quantity,
+            image: (productData?.images && productData.images[0]) || 
+                   item.image || 
+                   (product.images && product.images[0]) || 
+                   '/placeholder.jpg'
+          }
+        })
+      )
     }
+
+    console.log('[ORDER] Processed items:', { 
+      itemCount: items.length,
+      firstItem: items[0],
+      subtotal 
+    })
 
     // Apply coupon if provided
     let discount = 0
@@ -288,9 +356,12 @@ export async function POST(request: NextRequest) {
     })
 
     return NextResponse.json({
+      success: true,
       message: 'Order placed successfully',
+      _id: order._id,
       orderId: orderNumber,
       order: {
+        _id: order._id,
         orderId: orderNumber,
         totalAmount,
         status: 'pending',

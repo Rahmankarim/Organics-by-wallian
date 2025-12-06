@@ -189,27 +189,59 @@ export default function CheckoutPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('auth-token') || ''}`
         },
         credentials: 'include',
         body: JSON.stringify({
-          items: checkoutData.cartItems,
+          orderItems: checkoutData.cartItems,
           shippingAddress,
           paymentMethod,
-          orderNotes,
-          summary: checkoutData.cartSummary
+          specialInstructions: orderNotes
         })
       })
 
+      const order = await orderResponse.json()
+      
       if (!orderResponse.ok) {
-        throw new Error('Failed to create order')
+        throw new Error(order.error || 'Failed to create order')
+      }
+      
+      // Check if order was created successfully
+      if (!order || !order._id) {
+        throw new Error('Order was not created properly')
       }
 
-      const order = await orderResponse.json()
-
+      // Process payment based on method
       if (paymentMethod === 'cod') {
-        // Cash on Delivery - redirect to success page
-        router.push(`/orders/${order.id}?payment=success`)
-        toast.success('Order placed successfully!')
+        // Cash on Delivery - update order status via payment API
+        try {
+          const codResponse = await fetch('/api/payments', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${localStorage.getItem('auth-token') || ''}`
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+              orderId: order._id,
+              amount: checkoutData.cartSummary.total,
+              paymentMethod: 'cod'
+            })
+          })
+
+          const codData = await codResponse.json()
+
+          if (codData.success) {
+            toast.success('Order placed successfully! Pay on delivery.')
+            router.push(`/orders/${order._id}?payment=success`)
+          } else {
+            throw new Error(codData.error || 'Failed to confirm COD order')
+          }
+        } catch (error: any) {
+          console.error('COD confirmation error:', error)
+          toast.error(error.message || 'Failed to confirm order')
+          setIsProcessingPayment(false)
+        }
         return
       }
 
@@ -220,13 +252,14 @@ export default function CheckoutPage() {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
+              'Authorization': `Bearer ${localStorage.getItem('auth-token') || ''}`
             },
             credentials: 'include',
             body: JSON.stringify({
-              orderId: order.id,
+              orderId: order._id,
               amount: checkoutData.cartSummary.total,
               paymentMethod: 'stripe',
-              returnUrl: `${window.location.origin}/orders/${order.id}?payment=success`,
+              returnUrl: `${window.location.origin}/orders/${order._id}?payment=success`,
               cancelUrl: `${window.location.origin}/checkout`
             })
           })
