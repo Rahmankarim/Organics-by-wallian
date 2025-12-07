@@ -3,6 +3,7 @@
 ## Current Status
 
 **Localhost Database**: `organic_orchard`
+
 - ✓ Connected successfully
 - ✓ Contains 2 products:
   1. "Pure Walnut Oil 250ML From Gilgit" - Price: 1199
@@ -15,6 +16,7 @@
 ## The Problem
 
 Products show on localhost but NOT on Vercel because:
+
 1. Vercel doesn't have `MONGODB_URI` environment variable set
 2. This causes Vercel to not connect to MongoDB
 3. Result: Empty product list on Vercel
@@ -38,14 +40,17 @@ mongodb+srv://Reyan:reyan1122@cluster0.ym1qsw1.mongodb.net/organic_orchard?retry
 ### Step 2: Add Environment Variables to Vercel
 
 1. **Go to Vercel Dashboard**:
+
    - Visit: https://vercel.com/dashboard
    - Find your project: **Organics-by-wallian**
 
 2. **Navigate to Settings**:
+
    - Click **Settings** (in top menu)
    - Click **Environment Variables** (in left sidebar)
 
 3. **Add MONGODB_URI Variable**:
+
    - Click **"Add New"**
    - **Name**: `MONGODB_URI`
    - **Value**: Paste your connection string:
@@ -59,6 +64,7 @@ mongodb+srv://Reyan:reyan1122@cluster0.ym1qsw1.mongodb.net/organic_orchard?retry
    - Click **Save**
 
 4. **Add JWT_SECRET** (if not already there):
+
    - Click **"Add New"**
    - **Name**: `JWT_SECRET`
    - **Value**: `luxury-dry-fruits-super-secret-jwt-key-2025`
@@ -77,6 +83,7 @@ mongodb+srv://Reyan:reyan1122@cluster0.ym1qsw1.mongodb.net/organic_orchard?retry
 ### Step 3: Verify MongoDB Configuration in Vercel
 
 After adding variables, Vercel should show them in the Environment Variables list. You should see:
+
 - ✓ MONGODB_URI
 - ✓ JWT_SECRET
 - ✓ RESEND_API_KEY
@@ -88,6 +95,7 @@ After adding variables, Vercel should show them in the Environment Variables lis
 After setting environment variables, you need to redeploy:
 
 **Option A: Manual Redeploy (Easiest)**
+
 1. Go to **Deployments** tab in Vercel
 2. Find the latest deployment
 3. Click the **⋮** (three dots menu)
@@ -95,6 +103,7 @@ After setting environment variables, you need to redeploy:
 5. Wait for build to complete
 
 **Option B: Automatic Redeploy (via GitHub)**
+
 1. Go to your GitHub repository
 2. Make a small change to any file (e.g., add a comment)
 3. Commit and push
@@ -108,9 +117,11 @@ After setting environment variables, you need to redeploy:
 Once redeployed:
 
 1. **Go to your Vercel app**:
+
    - Visit your deployed URL (e.g., https://your-project.vercel.app)
 
 2. **Check Products Page**:
+
    - Navigate to `/products`
    - You should see the same 2 products as localhost:
      - "Pure Walnut Oil 250ML From Gilgit" - Price: 1199
@@ -127,11 +138,13 @@ Once redeployed:
 ### Products Still Not Showing?
 
 **Check 1: Verify Environment Variable is Set**
+
 - Go to Vercel → Settings → Environment Variables
 - Confirm `MONGODB_URI` is there
 - Confirm it includes `/organic_orchard` in the URL
 
 **Check 2: Check Vercel Logs**
+
 - Go to Vercel Dashboard → Deployments
 - Click the latest deployment
 - Click **Function Logs** tab
@@ -139,11 +152,13 @@ Once redeployed:
 - Share any errors for debugging
 
 **Check 3: Verify Network Access**
+
 - MongoDB Atlas → Network Access
 - Ensure IP `0.0.0.0/0` is whitelisted (or add specific Vercel IPs)
 - This allows Vercel to connect to MongoDB
 
 **Check 4: Manually Check API Response**
+
 - Go to `https://your-vercel-url/api/products`
 - You should see JSON with products array
 - If you see `{"products":[]}`, the connection is working but no products exist in Vercel's database
@@ -168,6 +183,7 @@ mongodb+srv://[username]:[password]@[cluster]/[database_name]?retryWrites=true&w
 ```
 
 Your specific URL:
+
 - **Username**: Reyan
 - **Password**: reyan1122
 - **Cluster**: cluster0.ym1qsw1
@@ -181,8 +197,8 @@ If any part is different, the connection might not work.
 ## Need Help?
 
 If products are still not showing after following these steps:
+
 1. Double-check the MONGODB_URI value includes `/organic_orchard`
 2. Check Vercel Function Logs for error messages
 3. Verify MongoDB Atlas Network Access allows Vercel connections
 4. Try a manual redeploy after waiting 1-2 minutes
-

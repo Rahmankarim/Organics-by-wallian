@@ -73,9 +73,8 @@ export const metadata: Metadata = {
     },
   },
   verification: {
-    google: "your-google-verification-code",
-    yandex: "your-yandex-verification-code",
-    bing: "your-bing-verification-code",
+    google: "dng7zcSpKaPWp29xMc_m3jpNzergMq6XKN5QH9DovsM",
+    yandex: ""
   },
   category: "Organic Products",
 }
@@ -107,7 +106,7 @@ export default function RootLayout({
     ],
     founder: {
       "@type": "Person",
-      name: "Wallian",
+      name: "Rahman Karim",
     },
     aggregateRating: {
       "@type": "AggregateRating",
