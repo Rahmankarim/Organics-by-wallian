@@ -4,7 +4,6 @@ export default function robots() {
       {
         userAgent: 'Googlebot',
         allow: '/',
-        disallow: ['/admin/', '/api/admin/'],
       },
       {
         userAgent: 'Googlebot-Image',
@@ -12,7 +11,6 @@ export default function robots() {
       },
       {
         userAgent: '*',
-        allow: '/',
         disallow: [
           '/admin/',
           '/api/admin/',
