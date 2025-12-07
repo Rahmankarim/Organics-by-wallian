@@ -1,6 +1,7 @@
 # Google Cloud Run Deployment - Complete Guide
 
 ## Prerequisites Checklist
+
 - [x] Docker installed: ✓ (version 28.4.0)
 - [ ] Google Cloud SDK (gcloud CLI) - Need to install
 - [ ] Google Cloud Account with billing enabled
@@ -12,6 +13,7 @@
 ## Step 1: Install Google Cloud SDK
 
 ### Option A: Windows (Recommended)
+
 1. Download: https://dl.google.com/dl/cloud/sdk/cloud-sdk-msi-x86_64.zip
 2. Extract the ZIP file
 3. Run: `google-cloud-sdk/install.bat`
@@ -20,11 +22,13 @@
 6. Verify: `gcloud --version`
 
 ### Option B: Windows (Chocolatey)
+
 ```bash
 choco install google-cloud-sdk
 ```
 
 ### Option C: Manual Download
+
 - Visit: https://cloud.google.com/sdk/docs/install-sdk
 - Download the Windows installer
 - Run the installer
@@ -70,6 +74,7 @@ In Google Cloud Console (https://console.cloud.google.com/):
    - ✓ Service Management API
 
 Or use CLI:
+
 ```bash
 gcloud services enable run.googleapis.com
 gcloud services enable cloudbuild.googleapis.com
@@ -95,11 +100,13 @@ gcloud projects add-iam-policy-binding organicsbywallian \
 ## Step 5: Deploy to Cloud Run
 
 Navigate to your project folder:
+
 ```bash
 cd "c:\Users\PMLS\Downloads\organicsbywallianmain"
 ```
 
 Deploy with this command:
+
 ```bash
 gcloud run deploy organics-by-wallian \
   --source . \
@@ -110,6 +117,7 @@ gcloud run deploy organics-by-wallian \
 ```
 
 ### What This Command Does:
+
 - `deploy organics-by-wallian` - Service name
 - `--source .` - Build from current directory
 - `--region asia-south1` - Deploy to Asia (Pakistan region)
@@ -122,12 +130,14 @@ gcloud run deploy organics-by-wallian \
 ## Step 6: Monitor Deployment
 
 The deployment will:
+
 1. Build your Docker container (~2-5 minutes)
 2. Push to Google Container Registry
 3. Deploy to Cloud Run
 4. Provide a public URL
 
 Watch the logs:
+
 ```bash
 gcloud run deploy organics-by-wallian \
   --source . \
@@ -141,8 +151,9 @@ gcloud run deploy organics-by-wallian \
 ## Step 7: Verify Deployment
 
 After deployment completes, you'll see:
+
 ```
-Service [organics-by-wallian] revision [organics-by-wallian-00001] has been deployed 
+Service [organics-by-wallian] revision [organics-by-wallian-00001] has been deployed
 and is serving 100 percent of traffic.
 Service URL: https://organics-by-wallian-xyz.a.run.app
 ```
@@ -167,6 +178,7 @@ curl https://organics-by-wallian-xyz.a.run.app/api/products
 ## Environment Variables on Cloud Run
 
 The environment variables are already set in the deployment command above:
+
 - ✓ MONGODB_URI - Points to organic_orchard database
 - ✓ JWT_SECRET - For authentication
 - ✓ RESEND_API_KEY - For emails
@@ -177,25 +189,33 @@ The environment variables are already set in the deployment command above:
 ## Troubleshooting
 
 ### Issue: `gcloud: command not found`
+
 **Solution**: Reinstall Google Cloud SDK and restart terminal
 
 ### Issue: Authentication Error
+
 **Solution**: Run `gcloud auth login` again
 
 ### Issue: Build Fails
-**Solution**: 
+
+**Solution**:
+
 1. Check Dockerfile exists in project root
 2. Run `npm run build` locally to verify build works
 3. Check Cloud Build logs in GCP Console
 
 ### Issue: Products Not Showing
+
 **Solution**:
+
 1. Verify MONGODB_URI is set in Cloud Run environment
 2. Check MongoDB connection allows Cloud Run IPs
 3. View logs: `gcloud run logs read organics-by-wallian --region asia-south1`
 
 ### Issue: High Latency/Slow Response
+
 **Solution**:
+
 1. Increase memory: `--memory 512Mi`
 2. Increase CPU: `--cpu 2`
 3. Increase timeout: `--timeout 3600`
@@ -248,6 +268,7 @@ gcloud run services describe organics-by-wallian --region asia-south1
 ## Cost Estimate
 
 Cloud Run pricing (as of 2025):
+
 - **Free Tier**: 2 million requests/month, 360,000 GB-seconds/month
 - **After free tier**: $0.40 per million requests + $0.00001667 per GB-second
 
@@ -302,4 +323,3 @@ gcloud run services delete organics-by-wallian --region asia-south1
 **Project**: organicsbywallian
 **Region**: asia-south1 (Pakistan)
 **Docker**: ✓ Ready
-
